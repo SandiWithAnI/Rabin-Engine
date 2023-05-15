@@ -15,10 +15,14 @@ void L_Teleport::on_enter()
 
 void L_Teleport::on_update(float dt)
 {
-    //const auto result = agent->move_toward_point(targetPoint, dt);
-    agent->set_position(targetPoint);
 
-        on_success();
+    //set the position of the agent
+    agent->set_position(targetPoint);
+    //the angle which the agent is facing
+    float rotation = RNG::range(-180.0f, 180.0f);
+    agent->set_yaw(rotation);
+
+    on_success();
     
 
     display_leaf_text();
