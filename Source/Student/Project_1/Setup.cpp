@@ -5,7 +5,10 @@
 void ProjectOne::setup()
 {
     // Create your inital agents
-    agents->create_behavior_agent("ExampleAgent", BehaviorTreeTypes::Example);
+    agents->create_behavior_agent("Agent1", BehaviorTreeTypes::Example);
+    agents->create_behavior_agent("Agent2", BehaviorTreeTypes::Example);
+    agents->create_behavior_agent("Agent3", BehaviorTreeTypes::Example);
+    agents->create_behavior_agent("Agent4", BehaviorTreeTypes::Example);
 
     // you can technically load any map you want, even create your own map file,
     // but behavior agents won't actually avoid walls or anything special, unless you code that yourself
@@ -15,7 +18,7 @@ void ProjectOne::setup()
     // you can also enable the pathing layer and set grid square colors as you see fit
     // works best with map 0, the completely blank map
     terrain->pathLayer.set_enabled(true);
-    terrain->pathLayer.set_value(0, 0, Colors::Red);
+    terrain->pathLayer.set_value(0, 0, Colors::Crimson);
 
     // camera position can be modified from this default as well
     auto camera = agents->get_camera_agent();
