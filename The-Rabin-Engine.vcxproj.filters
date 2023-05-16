@@ -325,6 +325,12 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Teleport.h">
       <Filter>Source\Student\Project_1\Leaf</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveRGB.h">
+      <Filter>Source\Student\Project_1\Leaf</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_BoarderRun.h">
+      <Filter>Source\Student\Project_1\Leaf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Framework\Main.cpp">
@@ -550,6 +556,12 @@
       <Filter>Source\Framework\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Teleport.cpp">
+      <Filter>Source\Student\Project_1\Leaf</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveRGB.cpp">
+      <Filter>Source\Student\Project_1\Leaf</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_BoarderRun.cpp">
       <Filter>Source\Student\Project_1\Leaf</Filter>
     </ClCompile>
   </ItemGroup>
