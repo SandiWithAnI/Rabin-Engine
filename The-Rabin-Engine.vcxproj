@@ -263,6 +263,7 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveToMouseClick.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveToRandomPosition.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_PlaySound.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_Sizes.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Teleport.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Twirling.h" />
     <ClInclude Include="Source\Student\Project_1\NodeHeaders.h" />
@@ -347,6 +348,7 @@
     <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveToMouseClick.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveToRandomPosition.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_PlaySound.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_Sizes.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Teleport.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Twirling.cpp" />
     <ClCompile Include="Source\Student\Project_1\Setup.cpp" />
