@@ -1,14 +1,19 @@
 #include <pch.h>
 #include "L_BoarderRun.h"
 #include "Agent/BehaviorAgent.h"
-
-//L_BoarderRun::L_BoarderRun() : timer(0.0f)
-//{}
+//
+//L_BoarderRun::L_BoarderRun()
+//{
+//    number = 0;
+//}
 
 
 void L_BoarderRun::on_enter()
 {
     // set animation, speed, etc
+    if (number == 0) {
+        number = 1;
+    }
     if (number == 1) {
     targetPoint.x = 97.0f;
     targetPoint.y = 0.0f;
@@ -34,7 +39,7 @@ void L_BoarderRun::on_enter()
         number = 1;
     }
     //agent->look_at_point(targetPoint);
-    agent->set_movement_speed(50.0f);
+    agent->set_movement_speed(100.0f);
 
 
     BehaviorNode::on_leaf_enter();
@@ -42,11 +47,8 @@ void L_BoarderRun::on_enter()
 
 void L_BoarderRun::on_update(float dt)
 {
-
-    
-        const bool isdone = agent->move_toward_point(targetPoint, dt);
+   const bool isdone = agent->move_toward_point(targetPoint, dt);
         if (isdone == true) {
-            //++number;
             on_success();
         }
 

@@ -5,7 +5,7 @@
 class L_BoarderRun : public BaseNode<L_BoarderRun>
 {
 public:
-    //L_BoarderRun();
+   // L_BoarderRun();
 protected:
     //float timer;
     virtual void on_enter() override;
@@ -13,5 +13,5 @@ protected:
 
 private:
     Vec3 targetPoint;
-    int number = 1;
+    int number{};
 };
