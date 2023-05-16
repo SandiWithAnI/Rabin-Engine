@@ -1,28 +1,28 @@
 #include <pch.h>
-#include "L_Teleport.h"
+#include "L_Twirling.h"
 #include "Agent/BehaviorAgent.h"
 
-void L_Teleport::on_enter()
+void L_Twirling::on_enter()
 {
     // set animation, speed, etc
 
     targetPoint = RNG::world_position();
+
     //agent->look_at_point(targetPoint);
 
     BehaviorNode::on_leaf_enter();
 }
 
-void L_Teleport::on_update(float dt)
+void L_Twirling::on_update(float dt)
 {
-
-    //set the position of the agent
-    agent->set_position(targetPoint);
-    //the angle which the agent is facing
+    const auto result = agent->move_toward_point(targetPoint, dt);
     float rotation = RNG::range(-PI, PI);
     agent->set_yaw(rotation);
 
-    on_success();
-    
+    if (result == true)
+    {
+        on_success();
+    }
 
     display_leaf_text();
 }

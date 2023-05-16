@@ -9,7 +9,7 @@ void L_MoveRGB::on_enter()
     thecolor.x = 0.0f;
     thecolor.y = 0.0f;
     thecolor.z = 0.0f;
-    timer = 1.0f;
+    timer = 0.5f;
     targetPoint = RNG::world_position();
     BehaviorNode::on_leaf_enter();
 }
@@ -31,7 +31,7 @@ void L_MoveRGB::on_update(float dt)
     {
         agent->set_color(thecolor);
         //reset the timer
-        timer = 1.0f;
+        timer = 0.5f;
     }
     //if the agent reaches the point
     if (result == true) {
