@@ -266,6 +266,7 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Sizes.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Teleport.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Twirling.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_Wide.h" />
     <ClInclude Include="Source\Student\Project_1\NodeHeaders.h" />
     <ClInclude Include="Source\Student\Project_2\P2_Pathfinding.h" />
   </ItemGroup>
@@ -351,6 +352,7 @@
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Sizes.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Teleport.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Twirling.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_Wide.cpp" />
     <ClCompile Include="Source\Student\Project_1\Setup.cpp" />
     <ClCompile Include="Source\Student\Project_2\P2_Pathfinding.cpp" />
     <ClCompile Include="Source\Student\Project_3\P3_TerrainAnalysis.cpp" />
