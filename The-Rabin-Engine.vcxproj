@@ -259,6 +259,7 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_CheckMouseClick.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_ColorClick.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Idle.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_FloorSpin.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveRGB.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveToFurthestAgent.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_MoveToMouseClick.h" />
@@ -347,6 +348,7 @@
     <ClCompile Include="Source\Student\Project_1\Leaf\L_CheckMouseClick.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_ColorClick.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_Idle.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_FloorSpin.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveRGB.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveToFurthestAgent.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_MoveToMouseClick.cpp" />

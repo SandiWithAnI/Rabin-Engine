@@ -7,7 +7,7 @@ void L_Trail::on_enter()
     // set animation, speed, etc
     targetPoint = RNG::world_position();
    
-   
+    agent->set_movement_speed(20.0f);
     //agent->look_at_point(targetPoint);
 
     BehaviorNode::on_leaf_enter();
