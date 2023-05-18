@@ -10,6 +10,8 @@ void L_MoveRGB::on_enter()
     thecolor.y = 0.0f;
     thecolor.z = 0.0f;
     timer = 0.5f;
+    //original speed
+    agent->set_movement_speed(30.0f);
     targetPoint = RNG::world_position();
     BehaviorNode::on_leaf_enter();
 }

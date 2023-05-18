@@ -28,7 +28,7 @@ void ProjectOne::setup()
     audioManager->SetVolume(0.5f);
     audioManager->PlaySoundEffect(L"Assets\\Audio\\retro.wav");
     // uncomment for example on playing music in the engine (must be .wav)
-    // audioManager->PlayMusic(L"Assets\\Audio\\PolkaFace.wav");
+     audioManager->PlayMusic(L"Assets\\Audio\\PolkaFace.wav");
     // audioManager->PauseMusic(...);
     // audioManager->ResumeMusic(...);
     // audioManager->StopMusic(...);

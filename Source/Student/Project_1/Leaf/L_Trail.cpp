@@ -7,7 +7,7 @@ void L_Trail::on_enter()
     // set animation, speed, etc
     targetPoint = RNG::world_position();
    
-    agent->set_movement_speed(20.0f);
+    agent->set_movement_speed(30.0f);
    // agent->set_roll(0.0f);
     //agent->set_pitch(0.0f);
     //agent->set_yaw(0.0f);

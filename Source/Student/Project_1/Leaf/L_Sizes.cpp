@@ -9,7 +9,7 @@ L_Sizes::L_Sizes() : timer(0.0f)
 void L_Sizes::on_enter()
 {
     // set animation, speed, etc
-
+    agent->set_movement_speed(30.0f);
     targetPoint = RNG::world_position();
     timer = 0.5f;
 

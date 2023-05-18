@@ -39,6 +39,7 @@ void L_BoarderRun::on_enter()
         number = 1;
     }
     //agent->look_at_point(targetPoint);
+    //speedup
     agent->set_movement_speed(100.0f);
 
 

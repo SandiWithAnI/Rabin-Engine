@@ -9,6 +9,7 @@ void L_Twirling::on_enter()
     targetPoint = RNG::world_position();
 
     //agent->look_at_point(targetPoint);
+    agent->set_movement_speed(30.0f);
 
     BehaviorNode::on_leaf_enter();
 }
