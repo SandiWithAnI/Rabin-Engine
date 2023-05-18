@@ -8,6 +8,9 @@ void L_Trail::on_enter()
     targetPoint = RNG::world_position();
    
     agent->set_movement_speed(20.0f);
+   // agent->set_roll(0.0f);
+    //agent->set_pitch(0.0f);
+    //agent->set_yaw(0.0f);
     //agent->look_at_point(targetPoint);
 
     BehaviorNode::on_leaf_enter();

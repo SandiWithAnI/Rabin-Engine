@@ -15,9 +15,11 @@ void L_Falling::on_enter()
     agent->set_position(inthesky);
 
     targetPoint.x = inthesky.x;
-    targetPoint.y = -400.0f;
+    targetPoint.y = -200.0f;
     targetPoint.z = inthesky.z;
     //agent->look_at_point(targetPoint);
+
+    agent->set_movement_speed(100.0f);
 
     BehaviorNode::on_leaf_enter();
 }
@@ -36,6 +38,7 @@ void L_Falling::on_update(float dt)
         finalpos.z = RNG::world_position().z;
 
         on_success();
+        agent->set_movement_speed(30.0f);
         agent->set_position(finalpos);
     }
 

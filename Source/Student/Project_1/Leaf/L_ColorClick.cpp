@@ -30,6 +30,9 @@ void L_ColorClick::on_update(float dt)
         agent->set_color(thecolor);
         on_success();
     }
+    else {
+        on_failure();
+    }
 
     display_leaf_text();
 }

@@ -10,6 +10,7 @@ void L_FloorSpin::on_enter()
     agent->set_roll(PI/2.0f);
     agent->set_pitch(-PI/2.0f);
 
+
     BehaviorNode::on_leaf_enter();
 }
 
@@ -23,6 +24,7 @@ void L_FloorSpin::on_update(float dt)
     if (timer <= 0.0f) {
         agent->set_roll(0.0f);
         agent->set_pitch(0.0f);
+        agent->set_yaw(0.0f);
         on_success();
         timer = 5.0f;
     }
