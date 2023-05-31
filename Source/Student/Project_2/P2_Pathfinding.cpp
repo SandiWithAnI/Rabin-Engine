@@ -88,6 +88,17 @@ float AStarPather::applyOctile(PathRequest& request) {
     return(std::min(xdiff, ydiff) * sqrt(2.0f) + std::max(xdiff, ydiff) - std::min(xdiff, ydiff));
 }
 
+float AStarPather::applyInconsistent(PathRequest& request) {
+    GridPos start = terrain->get_grid_position(request.start);
+    GridPos goal = terrain->get_grid_position(request.goal);
+
+    if ((start.row + start.col) % 2 > 0) {
+        return applyEuclidean(request);
+    }
+
+    return 0;
+}
+
 PathResult AStarPather::compute_path(PathRequest &request)
 {
     /*
@@ -124,13 +135,28 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
     // WRITE YOUR CODE HERE
 
-   /* if (request.newRequest) {
+  /*  if (request.newRequest) {
+
+        float heuristik{};
+
         if (OpenList.empty() == false) {
             OpenList.clear();
             if (request.settings.heuristic == Heuristic::MANHATTAN) {
-                
-               
+                heuristik = applyManhattan(request);
             }
+            else if (request.settings.heuristic == Heuristic::CHEBYSHEV) {
+                heuristik = applyChebyshev(request);
+            }
+            else if (request.settings.heuristic == Heuristic::EUCLIDEAN) {
+                heuristik = applyEuclidean(request);
+            }
+            else if(request.settings.heuristic == Heuristic::OCTILE){
+                heuristik = applyOctile(request);
+            }
+            else if (request.settings.heuristic == Heuristic::INCONSISTENT) {
+                heuristik = applyInconsistent(request);
+            }
+
         }
         Node startnode;
         startnode.GridPosition= terrain->get_grid_position(request.start);

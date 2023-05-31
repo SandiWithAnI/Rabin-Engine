@@ -27,6 +27,7 @@ public:
     float applyChebyshev(PathRequest& request);
     float applyEuclidean(PathRequest& request);
     float applyOctile(PathRequest& request);
+    float applyInconsistent(PathRequest& request);
 
     struct Node {
         Node* Parent;
