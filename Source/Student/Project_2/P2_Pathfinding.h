@@ -23,4 +23,24 @@ public:
         makes sense to you.
     */
 
+    float applyManhattan(PathRequest& request);
+    float applyChebyshev(PathRequest& request);
+    float applyEuclidean(PathRequest& request);
+    float applyOctile(PathRequest& request);
+
+    struct Node {
+        Node* Parent;
+        GridPos GridPosition;
+        float finalcost{}; // f(x)
+        float givencost{}; // g(x)
+        enum onList whichList;
+    };
+
+    enum onList {
+        OPEN,
+        CLOSED
+    };
+
+    std::list<Node>OpenList;
 };
+

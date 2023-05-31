@@ -35,6 +35,8 @@ bool AStarPather::initialize()
         object that std::function can wrap will suffice.
     */
 
+
+
     return true; // return false if any errors actually occur, to stop engine initialization
 }
 
@@ -44,6 +46,46 @@ void AStarPather::shutdown()
         Free any dynamically allocated memory or any other general house-
         keeping you need to do during shutdown.
     */
+}
+
+float AStarPather::applyManhattan(PathRequest& request) {
+    GridPos start = terrain->get_grid_position(request.start);
+    GridPos goal = terrain->get_grid_position(request.goal);
+
+    float xdiff = abs(static_cast<float>(start.row - goal.row));
+    float ydiff = abs(static_cast<float>(start.col - goal.col));
+
+    return (xdiff + ydiff);
+}
+
+float AStarPather::applyChebyshev(PathRequest& request) {
+    GridPos start = terrain->get_grid_position(request.start);
+    GridPos goal = terrain->get_grid_position(request.goal);
+
+    float xdiff = abs(static_cast<float>(start.row - goal.row));
+    float ydiff = abs(static_cast<float>(start.col - goal.col));
+
+    return std::max(xdiff, ydiff);
+}
+
+float AStarPather::applyEuclidean(PathRequest& request) {
+    GridPos start = terrain->get_grid_position(request.start);
+    GridPos goal = terrain->get_grid_position(request.goal);
+
+    float xdiff = abs(static_cast<float>(start.row - goal.row));
+    float ydiff = abs(static_cast<float>(start.col - goal.col));
+
+    return sqrt((xdiff * xdiff) + (ydiff * ydiff));
+}
+
+float AStarPather::applyOctile(PathRequest& request) {
+    GridPos start = terrain->get_grid_position(request.start);
+    GridPos goal = terrain->get_grid_position(request.goal);
+
+    float xdiff = abs(static_cast<float>(start.row - goal.row));
+    float ydiff = abs(static_cast<float>(start.col - goal.col));
+
+    return(std::min(xdiff, ydiff) * sqrt(2.0f) + std::max(xdiff, ydiff) - std::min(xdiff, ydiff));
 }
 
 PathResult AStarPather::compute_path(PathRequest &request)
@@ -82,8 +124,25 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
     // WRITE YOUR CODE HERE
 
+   /* if (request.newRequest) {
+        if (OpenList.empty() == false) {
+            OpenList.clear();
+            if (request.settings.heuristic == Heuristic::MANHATTAN) {
+                
+               
+            }
+        }
+        Node startnode;
+        startnode.GridPosition= terrain->get_grid_position(request.start);
+        startnode.Parent = nullptr;
+        startnode.givencost = 0;
+        startnode.finalcost = startnode.givencost;
+        OpenList.push_back(startnode);
+    }*/
+
+   
     
-    // Just sample code, safe to delete
+    //// Just sample code, safe to delete
     GridPos start = terrain->get_grid_position(request.start);
     GridPos goal = terrain->get_grid_position(request.goal);
     terrain->set_color(start, Colors::Orange);
