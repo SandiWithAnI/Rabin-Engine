@@ -34,9 +34,9 @@ bool AStarPather::initialize()
         Callback is just a typedef for std::function<void(void)>, so any std::invoke'able
         object that std::function can wrap will suffice.
     */
-
-
-
+    Callback cb = std::bind(&AStarPather::setthemap, this);
+    Messenger::listen_for_message(Messages::MAP_CHANGE, cb);
+  
     return true; // return false if any errors actually occur, to stop engine initialization
 }
 
@@ -46,10 +46,41 @@ void AStarPather::shutdown()
         Free any dynamically allocated memory or any other general house-
         keeping you need to do during shutdown.
     */
+ /*   const int width = terrain->get_map_width();
+    for (int i = 0; i < width; ++i) {
+        delete[] MapforAStar;
+    } 
+    delete[] MapforAStar;*/
 }
 
-float AStarPather::applyManhattan(PathRequest& request) {
-    GridPos start = terrain->get_grid_position(request.start);
+void AStarPather::setthemap() {
+    //allocate memory for the map
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+    MapforAStar = new AstarNode * [width];
+    for (int i = 0; i < width; ++i) {
+        MapforAStar[i] = new AstarNode[height];
+    } 
+
+    //make all the nodes on the map on waiting n wall
+    for (int j = 0; j < width;++j ) {
+        for (int k = 0; k < width; ++k) {
+            if (terrain->is_wall(j, k)) {
+                MapforAStar[j][k].whichList = onList::WALL;
+
+            }
+            else {
+            MapforAStar[j][k].whichList = onList::WAITING;
+            MapforAStar[j][k].givencost = 0.0f;
+
+            }
+        }
+    }
+}
+
+float AStarPather::applyManhattan(Vec3& startpos, PathRequest& request) {
+    GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
     float xdiff = abs(static_cast<float>(start.row - goal.row));
@@ -58,8 +89,8 @@ float AStarPather::applyManhattan(PathRequest& request) {
     return (xdiff + ydiff);
 }
 
-float AStarPather::applyChebyshev(PathRequest& request) {
-    GridPos start = terrain->get_grid_position(request.start);
+float AStarPather::applyChebyshev(Vec3& startpos, PathRequest& request) {
+    GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
     float xdiff = abs(static_cast<float>(start.row - goal.row));
@@ -68,8 +99,8 @@ float AStarPather::applyChebyshev(PathRequest& request) {
     return std::max(xdiff, ydiff);
 }
 
-float AStarPather::applyEuclidean(PathRequest& request) {
-    GridPos start = terrain->get_grid_position(request.start);
+float AStarPather::applyEuclidean(Vec3& startpos, PathRequest& request) {
+    GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
     float xdiff = abs(static_cast<float>(start.row - goal.row));
@@ -78,8 +109,8 @@ float AStarPather::applyEuclidean(PathRequest& request) {
     return sqrt((xdiff * xdiff) + (ydiff * ydiff));
 }
 
-float AStarPather::applyOctile(PathRequest& request) {
-    GridPos start = terrain->get_grid_position(request.start);
+float AStarPather::applyOctile(Vec3& startpos, PathRequest& request) {
+    GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
     float xdiff = abs(static_cast<float>(start.row - goal.row));
@@ -88,16 +119,18 @@ float AStarPather::applyOctile(PathRequest& request) {
     return(std::min(xdiff, ydiff) * sqrt(2.0f) + std::max(xdiff, ydiff) - std::min(xdiff, ydiff));
 }
 
-float AStarPather::applyInconsistent(PathRequest& request) {
-    GridPos start = terrain->get_grid_position(request.start);
+float AStarPather::applyInconsistent(Vec3& startpos, PathRequest& request) {
+    GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
     if ((start.row + start.col) % 2 > 0) {
-        return applyEuclidean(request);
+        return applyEuclidean(startpos, request);
     }
 
     return 0;
 }
+
+
 
 PathResult AStarPather::compute_path(PathRequest &request)
 {
@@ -134,46 +167,172 @@ PathResult AStarPather::compute_path(PathRequest &request)
     */
 
     // WRITE YOUR CODE HERE
+   
 
-  /*  if (request.newRequest) {
 
-        float heuristik{};
+    GridPos goal = terrain->get_grid_position(request.goal);
 
-        if (OpenList.empty() == false) {
+    if (request.newRequest) {
+        float startheuristic = 0.0f;
+        if (OpenList.empty()==false) {
             OpenList.clear();
-            if (request.settings.heuristic == Heuristic::MANHATTAN) {
-                heuristik = applyManhattan(request);
-            }
-            else if (request.settings.heuristic == Heuristic::CHEBYSHEV) {
-                heuristik = applyChebyshev(request);
-            }
-            else if (request.settings.heuristic == Heuristic::EUCLIDEAN) {
-                heuristik = applyEuclidean(request);
-            }
-            else if(request.settings.heuristic == Heuristic::OCTILE){
-                heuristik = applyOctile(request);
-            }
-            else if (request.settings.heuristic == Heuristic::INCONSISTENT) {
-                heuristik = applyInconsistent(request);
+        }
+        if (request.settings.heuristic==Heuristic::CHEBYSHEV) {
+            startheuristic = applyChebyshev(request.start, request);
+        }
+        if (request.settings.heuristic == Heuristic::EUCLIDEAN) {
+            startheuristic = applyEuclidean(request.start,request);
+        }
+        if (request.settings.heuristic == Heuristic::INCONSISTENT) {
+            startheuristic = applyInconsistent(request.start,request);
+        }
+        if (request.settings.heuristic == Heuristic::MANHATTAN) {
+            startheuristic = applyManhattan(request.start,request);
+        }
+        if (request.settings.heuristic == Heuristic::OCTILE) {
+            startheuristic = applyOctile(request.start,request);
+        }
+
+       
+        GridPos getposition = terrain->get_grid_position(request.start);
+        MapforAStar[getposition.row][getposition.col].finalcost = startheuristic + MapforAStar[getposition.row][getposition.col].givencost;
+      
+        //put the starting node on the openlist
+        OpenList.push_back(&MapforAStar[getposition.row][getposition.col]);
+        
+    }
+
+    GridPos start = terrain->get_grid_position(request.start);
+
+    while (OpenList.empty()==false) {
+        GridPos lowestcost;
+        //pop the cheapest node on the list
+
+        if (OpenList.size()==1) { //if only got one element in the list
+            lowestcost= (*OpenList.begin())->GridPosition;
+            OpenList.pop_back();
+        }
+        else {
+            for (std::list<AstarNode*>::iterator it = OpenList.begin(); std::next(it,1) != OpenList.end(); ++it) {
+                if ((*it)->finalcost >  (*std::next(it,1))->finalcost ) {
+                    lowestcost = (*std::next(it, 1))->GridPosition;
+                }
+                else {
+                    lowestcost = (*it)->GridPosition;
+                }
             }
 
         }
-        Node startnode;
-        startnode.GridPosition= terrain->get_grid_position(request.start);
-        startnode.Parent = nullptr;
-        startnode.givencost = 0;
-        startnode.finalcost = startnode.givencost;
-        OpenList.push_back(startnode);
-    }*/
+
+        //if the node is goal node
+        if (lowestcost== goal) {
+            return PathResult::COMPLETE;
+        }
+        MapforAStar[(lowestcost).row][(lowestcost).col].whichList = onList::CLOSED;
+        
+        const int width = terrain->get_map_width() -1;
+        const int height = terrain->get_map_height() -1 ;
+
+        //getting all valid neighbours
+        if ((lowestcost).row !=0) { //checking left of parent
+            float startheuristic = 0.0f;
+            int pos = (lowestcost).row - 1;
+            //ensure its not a wall, if not a wall then put on open list
+            if (MapforAStar[pos][(lowestcost).col].whichList == onList::WAITING) {
+                MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
+                MapforAStar[pos][(lowestcost).col].givencost = ++MapforAStar[(lowestcost).row][(lowestcost).col].givencost;
+                Vec3 thestart = terrain->get_world_position(MapforAStar[pos][(lowestcost).col].GridPosition);
+                if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request);}
+                if (request.settings.heuristic == Heuristic::EUCLIDEAN) {startheuristic = applyEuclidean(thestart, request); }
+                if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
+                if (request.settings.heuristic == Heuristic::MANHATTAN) {startheuristic = applyManhattan(thestart, request);}
+                if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request);}
+                //link the parent
+                MapforAStar[pos][lowestcost.col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                //calculate final cost
+                MapforAStar[pos][lowestcost.col].finalcost = MapforAStar[pos][(lowestcost).col].givencost + startheuristic;
+                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+            }
+            //if its already on the open list
+            if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN) {
+              //heuristics will not change only the given cost will change
+                Vec3 thestart = terrain->get_world_position(MapforAStar[pos][(lowestcost).col].GridPosition);
+                if (request.settings.heuristic == Heuristic::CHEBYSHEV) {startheuristic = applyChebyshev(thestart, request);}
+                if (request.settings.heuristic == Heuristic::EUCLIDEAN) {startheuristic = applyEuclidean(thestart, request);}
+                if (request.settings.heuristic == Heuristic::INCONSISTENT) {startheuristic = applyInconsistent(thestart, request);}
+                if (request.settings.heuristic == Heuristic::MANHATTAN) {startheuristic = applyManhattan(thestart, request);}
+                if (request.settings.heuristic == Heuristic::OCTILE) {startheuristic = applyOctile(thestart, request);}
+                float newgivencost = ++MapforAStar[(lowestcost).row][(lowestcost).col].givencost;
+                float newfinalcost = startheuristic + newgivencost;
+
+                for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it ) {
+                    if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
+                        //update the values if its cheaper
+                        if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
+                            (*it)->finalcost = newfinalcost;
+                            (*it)->givencost = newgivencost;
+                            (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+            }
+            
+        }
+        if (lowestcost.row != width) { //checking right of parent
+
+        }
+
+        if (lowestcost.row != 0 && lowestcost.col != height) { //checking for top left
+
+        }
+        if (lowestcost.col != 0) { //checking for direct bottom
+
+        }
+        if (lowestcost.col != height) { //checking for top of parent
+
+        }
+        if (lowestcost.row != width && lowestcost.col != 0) {//checking  bottom right
+
+        }
+        if (lowestcost.row != 0 && lowestcost.col != 0) { //checking bottom left
+
+        }
+        if (lowestcost.row != width && lowestcost.col != height) { //checking top right
+
+        }
+
+
+        
+    }
 
    
     
     //// Just sample code, safe to delete
-    GridPos start = terrain->get_grid_position(request.start);
+   /* GridPos start = terrain->get_grid_position(request.start);
     GridPos goal = terrain->get_grid_position(request.goal);
     terrain->set_color(start, Colors::Orange);
     terrain->set_color(goal, Colors::Orange);
     request.path.push_back(request.start);
-    request.path.push_back(request.goal);
+    request.path.push_back(request.goal);*/
+
+
+  /*  request.path.push_back(request.start);
+    GridPos pos1;
+    pos1.col = 1;
+    pos1.row = 15;
+
+    GridPos pos2;
+    pos2.col = 2;
+    pos2.row = 10;
+    Vec3 one = terrain->get_world_position(pos1);
+    Vec3 two = terrain->get_world_position(pos2);
+
+    request.path.push_back(two);
+    request.path.push_back(one);
+    request.path.push_back(request.goal);*/
+
     return PathResult::COMPLETE;
 }

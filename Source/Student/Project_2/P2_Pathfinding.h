@@ -1,5 +1,19 @@
 #pragma once
 #include "Misc/PathfindingDetails.hpp"
+struct AstarNode {
+    float finalcost{}; // f(x)
+    float givencost{}; // g(x)
+    enum onList whichList;
+    GridPos GridPosition;
+    AstarNode* Parent;
+};
+
+enum onList {
+    OPEN,
+    WAITING,
+    WALL,
+    CLOSED
+};
 
 class AStarPather
 {
@@ -23,25 +37,19 @@ public:
         makes sense to you.
     */
 
-    float applyManhattan(PathRequest& request);
-    float applyChebyshev(PathRequest& request);
-    float applyEuclidean(PathRequest& request);
-    float applyOctile(PathRequest& request);
-    float applyInconsistent(PathRequest& request);
+    float applyManhattan(Vec3& startpos, PathRequest& request);
+    float applyChebyshev(Vec3& startpos, PathRequest& request);
+    float applyEuclidean(Vec3& startpos, PathRequest& request);
+    float applyOctile(Vec3& startpos, PathRequest& request);
+    float applyInconsistent(Vec3& startpos, PathRequest& request);
+   
 
-    struct Node {
-        Node* Parent;
-        GridPos GridPosition;
-        float finalcost{}; // f(x)
-        float givencost{}; // g(x)
-        enum onList whichList;
-    };
+    void setthemap();
 
-    enum onList {
-        OPEN,
-        CLOSED
-    };
 
-    std::list<Node>OpenList;
+    AstarNode**MapforAStar;
+    std::list<AstarNode*>OpenList;
+
 };
+
 
