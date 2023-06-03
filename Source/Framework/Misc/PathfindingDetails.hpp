@@ -50,8 +50,9 @@ struct PathRequest
 {
     Vec3 start;
     Vec3 goal;
-    WaypointList path;
+    WaypointList path; //list of Vec3 the path it should take to the goal (?)
 
+    //settings of how the path should be calculated
     struct Settings
     {
         Method method;
@@ -64,7 +65,9 @@ struct PathRequest
     } settings;
 
     bool newRequest;
+
 };
+
 
 enum class PathResult
 {
@@ -72,3 +75,4 @@ enum class PathResult
     COMPLETE,
     IMPOSSIBLE
 };
+
