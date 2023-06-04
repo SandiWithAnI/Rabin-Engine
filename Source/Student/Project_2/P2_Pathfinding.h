@@ -50,6 +50,8 @@ public:
     AstarNode**MapforAStar;
     std::list<AstarNode*>OpenList;
 
+    bool once;
+
 };
 
 

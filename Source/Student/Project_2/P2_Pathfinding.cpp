@@ -60,7 +60,7 @@ void AStarPather::setthemap() {
 
     MapforAStar = new AstarNode * [width];
     for (int i = 0; i < width; ++i) {
-        MapforAStar[i] = new AstarNode[height];
+        MapforAStar[i] = new AstarNode[height]{};
     } 
 
     //make all the nodes on the map on waiting n wall
@@ -196,6 +196,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         MapforAStar[j][k].givencost = 0.0f;
                         MapforAStar[j][k].GridPosition.row = j;
                         MapforAStar[j][k].GridPosition.col = k;
+                        MapforAStar[j][k].Parent = nullptr;
 
                     }
                 }
@@ -222,12 +223,42 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
     while (OpenList.empty()==false) {
  
-       
+        /*if (InputHandler::get_current_state(KBKeys::S) == InputHandler::InputState::PRESSED)
+        {
+            const int width = terrain->get_map_width();
+            const int height = terrain->get_map_height();
+            auto& dr = renderer->get_debug_renderer();
+            for (int i=0; i<width;++i)
+            {
+                for (int j = 0; j < height; ++j) {
+
+                    if (MapforAStar[i]+j != nullptr &&(MapforAStar[i][j].whichList == onList::OPEN || MapforAStar[i][j].whichList == onList::CLOSED ) && MapforAStar[i][j].Parent != nullptr)
+                    {
+                        AstarNode* parent =MapforAStar[i][j].Parent;
+                        dr.draw_arrow(terrain->get_world_position(MapforAStar[i][j].GridPosition), terrain->get_world_position(parent->GridPosition), Colors::Black);
+                    }
+
+                }
+            }
+
+            if (InputHandler::get_current_state(KBKeys::A) == InputHandler::InputState::PRESSED)
+            {
+                once = true;
+                return PathResult::PROCESSING;
+            }
+
+            if(!once) return PathResult::PROCESSING;
+        }
+        once = false;
+       */
         //pop the cheapest node on the list
 
         if (OpenList.size()==1) { //if only got one element in the list
             lowestcost= (*OpenList.begin())->GridPosition;
-            terrain->set_color(lowestcost, Colors::Yellow);
+            if (request.settings.debugColoring) {
+                terrain->set_color(lowestcost, Colors::Yellow);
+            }
+
             OpenList.pop_back();
         }
         else {
@@ -255,7 +286,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 }
             }*/
             OpenList.erase(toerase);
-            terrain->set_color(lowestcost, Colors::Yellow);
+            if (request.settings.debugColoring) {
+                terrain->set_color(lowestcost, Colors::Yellow);
+            }
         }
 
         //if the node is goal node
@@ -290,65 +323,6 @@ PathResult AStarPather::compute_path(PathRequest &request)
         const int width = terrain->get_map_width() -1;
         const int height = terrain->get_map_height() -1 ;
 
-        ////checking if the there is any of the 8 surround grid is a wall
-        //if ((lowestcost).row != 0) { //checking bot of parent
-        //    int ypos = (lowestcost).col;
-        //    int pos = (lowestcost).row - 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.row != width) { //checking top of parent
-        //    int ypos = lowestcost.col;
-        //    int pos = (lowestcost).row + 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.row != height && lowestcost.col != 0) { //top left
-        //    int ypos = (lowestcost).col - 1;
-        //    int pos = (lowestcost).row + 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.col != 0) {
-        //    int ypos = (lowestcost).col - 1;
-        //    int pos = (lowestcost).row;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.col != height) {
-        //    int ypos = (lowestcost).col + 1;
-        //    int pos = (lowestcost).row;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.row != 0 && lowestcost.col != height) {
-        //    int ypos = (lowestcost).col + 1;
-        //    int pos = (lowestcost).row - 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.row != 0 && lowestcost.col != 0) {
-        //    int ypos = (lowestcost).col - 1;
-        //    int pos = (lowestcost).row - 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-        //if (lowestcost.row != width && lowestcost.col != height) {
-        //    int ypos = (lowestcost).col + 1;
-        //    int pos = (lowestcost).row + 1;
-        //    if (thereiswall = terrain->is_wall(pos, ypos)) {
-        //        diagonalcalculation = false;
-        //    }
-        //}
-
-
 /********************************************************CALCULATION****************************************************************************************/
 
       
@@ -361,7 +335,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     GridPos colorchange;
                     colorchange.row = pos;
                     colorchange.col = lowestcost.col;
-                    terrain->set_color(colorchange, Colors::Blue);
+                    if (request.settings.debugColoring) {
+                        terrain->set_color(colorchange, Colors::Blue);
+                    }
                     MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
                     MapforAStar[pos][(lowestcost).col].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     Vec3 thestart = terrain->get_world_position(MapforAStar[pos][(lowestcost).col].GridPosition);
@@ -414,7 +390,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     GridPos colorchange;
                     colorchange.row = pos;
                     colorchange.col = lowestcost.col;
-                    terrain->set_color(colorchange, Colors::Blue);
+                    if (request.settings.debugColoring) {
+                        terrain->set_color(colorchange, Colors::Blue);
+                    }
                     MapforAStar[pos][ypos].whichList = onList::OPEN;
                     MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -485,7 +463,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         GridPos colorchange;
                         colorchange.row = pos;
                         colorchange.col = ypos;
-                        terrain->set_color(colorchange, Colors::Blue);
+                        if (request.settings.debugColoring) {
+                            terrain->set_color(colorchange, Colors::Blue);
+                        }
                         MapforAStar[pos][ypos].whichList = onList::OPEN;
                         MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -541,7 +521,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     GridPos colorchange;
                     colorchange.row = pos;
                     colorchange.col = ypos;
-                    terrain->set_color(colorchange, Colors::Blue);
+                    if (request.settings.debugColoring) {
+                        terrain->set_color(colorchange, Colors::Blue);
+                    }
                     MapforAStar[pos][ypos].whichList = onList::OPEN;
                     MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -593,7 +575,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     GridPos colorchange;
                     colorchange.row = pos;
                     colorchange.col = ypos;
-                    terrain->set_color(colorchange, Colors::Blue);
+                    if (request.settings.debugColoring) {
+                        terrain->set_color(colorchange, Colors::Blue);
+                    }
                     MapforAStar[pos][ypos].whichList = onList::OPEN;
                     MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -661,7 +645,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         GridPos colorchange;
                         colorchange.row = pos;
                         colorchange.col = ypos;
-                        terrain->set_color(colorchange, Colors::Blue);
+                        if (request.settings.debugColoring) {
+                            terrain->set_color(colorchange, Colors::Blue);
+                        }
                         MapforAStar[pos][ypos].whichList = onList::OPEN;
                         MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -732,7 +718,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         GridPos colorchange;
                         colorchange.row = pos;
                         colorchange.col = ypos;
-                        terrain->set_color(colorchange, Colors::Blue);
+                        if (request.settings.debugColoring) {
+                            terrain->set_color(colorchange, Colors::Blue);
+                        }
                         MapforAStar[pos][ypos].whichList = onList::OPEN;
                         MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -804,7 +792,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         GridPos colorchange;
                         colorchange.row = pos;
                         colorchange.col = ypos;
-                        terrain->set_color(colorchange, Colors::Blue);
+                        if (request.settings.debugColoring) {
+                            terrain->set_color(colorchange, Colors::Blue);
+                        }
                         MapforAStar[pos][ypos].whichList = onList::OPEN;
                         MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost = 1.0f;
                         Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
@@ -854,6 +844,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
             return PathResult::PROCESSING;
         }
 
+
     }
 
    
@@ -882,5 +873,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
     request.path.push_back(two);
     request.path.push_back(one);
     request.path.push_back(request.goal);*/
+
+
 
 }
