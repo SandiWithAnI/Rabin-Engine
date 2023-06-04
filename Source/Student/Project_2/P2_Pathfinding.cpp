@@ -251,6 +251,15 @@ PathResult AStarPather::compute_path(PathRequest &request)
         }
         once = false;
        */
+
+
+        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+            std::cout << (*it)->GridPosition.row << "    ";
+            std::cout << (*it)->GridPosition.col << "     ";
+            std::cout << " F: " << (*it)->finalcost << "G: " << (*it)->givencost << "\n";
+        }
+        std::cout << "\n\n";
+
         //pop the cheapest node on the list
 
         if (OpenList.size()==1) { //if only got one element in the list
@@ -317,7 +326,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
             }
             return PathResult::COMPLETE;
         }
-
+       
         MapforAStar[(lowestcost).row][(lowestcost).col].whichList = onList::CLOSED;
         
         const int width = terrain->get_map_width() -1;
@@ -364,18 +373,38 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     float newfinalcost = startheuristic + newgivencost;
 
-                    for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                        if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
-                            //update the values if its cheaper
-                            if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
-                                (*it)->finalcost = newfinalcost;
-                                (*it)->givencost = newgivencost;
-                                (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                            }
-                            else {
-                                break;
+                    if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN) {
+                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                            if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
+                                //update the values if its cheaper
+                                if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
+                                    (*it)->finalcost = newfinalcost;
+                                    (*it)->givencost = newgivencost;
+                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                    
+                                }
+                                else {
+                                    break;
+                                }
                             }
                         }
+                    } 
+                     if (MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) { //if it was on the closed list
+                        if (MapforAStar[pos][(lowestcost).col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                            //update all the values
+                            MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
+                            MapforAStar[pos][(lowestcost).col].givencost = newgivencost;
+                            MapforAStar[pos][(lowestcost).col].finalcost = newfinalcost;
+                            MapforAStar[pos][(lowestcost).col].Parent= &MapforAStar[(lowestcost).row][(lowestcost).col];
+                            if (request.settings.debugColoring) {
+                                GridPos colorchange;
+                                colorchange.row = pos;
+                                colorchange.col = lowestcost.col;
+                                terrain->set_color(colorchange, Colors::Blue);
+                            }
+                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+                        }
+                       
                     }
                 }
 
@@ -418,18 +447,36 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
                     float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     float newfinalcost = startheuristic + newgivencost;
+                    if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN) {
+                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                            if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
+                                //update the values if its cheaper
+                                if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
+                                    (*it)->finalcost = newfinalcost;
+                                    (*it)->givencost = newgivencost;
+                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                     if (MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) {
+                        if (MapforAStar[pos][(lowestcost).col].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                            MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
+                            MapforAStar[pos][(lowestcost).col].givencost = newgivencost;
+                            MapforAStar[pos][(lowestcost).col].finalcost = newfinalcost;
+                            MapforAStar[pos][(lowestcost).col].Parent= &MapforAStar[(lowestcost).row][(lowestcost).col];
 
-                    for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                        if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
-                            //update the values if its cheaper
-                            if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
-                                (*it)->finalcost = newfinalcost;
-                                (*it)->givencost = newgivencost;
-                                (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+                            if (request.settings.debugColoring) {
+                                GridPos colorchange;
+                                colorchange.row = pos;
+                                colorchange.col = lowestcost.col;
+                                terrain->set_color(colorchange, Colors::Blue);
                             }
-                            else {
-                                break;
-                            }
+                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
                         }
                     }
                 }
@@ -492,24 +539,43 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         float newfinalcost = startheuristic + newgivencost;
 
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
+                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                    //update the values if its cheaper
+                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                        (*it)->finalcost = newfinalcost;
+                                        (*it)->givencost = newgivencost;
+                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                    }
+                                    else {
+                                        break;
+                                    }
                                 }
-                                else {
-                                    break;
+                            }
+                        }
+                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                            if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                                MapforAStar[pos][ypos].whichList = onList::OPEN;
+                                MapforAStar[pos][ypos].givencost = newgivencost;
+                                MapforAStar[pos][ypos].finalcost = newfinalcost;
+                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+
+                                if (request.settings.debugColoring) {
+                                    GridPos colorchange;
+                                    colorchange.row = pos;
+                                    colorchange.col = ypos;
+                                    terrain->set_color(colorchange, Colors::Blue);
                                 }
+                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
                             }
                         }
                     }
                 }
 
-                topwall = false;
-                leftwall = false;
+                /*topwall = false;
+                leftwall = false;*/
             }
             //left
             if (lowestcost.col != 0) { //checking for left of parent
@@ -549,18 +615,36 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
                     float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     float newfinalcost = startheuristic + newgivencost;
+                    if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
+                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                //update the values if its cheaper
+                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                    (*it)->finalcost = newfinalcost;
+                                    (*it)->givencost = newgivencost;
+                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                        if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                            MapforAStar[pos][ypos].whichList = onList::OPEN;
+                            MapforAStar[pos][ypos].givencost = newgivencost;
+                            MapforAStar[pos][ypos].finalcost = newfinalcost;
+                            MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
-                    for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                        if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                            //update the values if its cheaper
-                            if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                (*it)->finalcost = newfinalcost;
-                                (*it)->givencost = newgivencost;
-                                (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+                            if (request.settings.debugColoring) {
+                                GridPos colorchange;
+                                colorchange.row = pos;
+                                colorchange.col = ypos;
+                                terrain->set_color(colorchange, Colors::Blue);
                             }
-                            else {
-                                break;
-                            }
+                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
                         }
                     }
                 }
@@ -604,17 +688,37 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                     float newfinalcost = startheuristic + newgivencost;
 
-                    for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                        if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                            //update the values if its cheaper
-                            if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                (*it)->finalcost = newfinalcost;
-                                (*it)->givencost = newgivencost;
-                                (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                    if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
+
+                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                //update the values if its cheaper
+                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                    (*it)->finalcost = newfinalcost;
+                                    (*it)->givencost = newgivencost;
+                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                }
+                                else {
+                                    break;
+                                }
                             }
-                            else {
-                                break;
+                        }
+                    }
+                    else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                        if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                            MapforAStar[pos][ypos].whichList = onList::OPEN;
+                            MapforAStar[pos][ypos].givencost = newgivencost;
+                            MapforAStar[pos][ypos].finalcost = newfinalcost;
+                            MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+
+                            if (request.settings.debugColoring) {
+                                GridPos colorchange;
+                                colorchange.row = pos;
+                                colorchange.col = ypos;
+                                terrain->set_color(colorchange, Colors::Blue);
                             }
+                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
                         }
                     }
                 }
@@ -673,20 +777,39 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
                         float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         float newfinalcost = startheuristic + newgivencost;
+                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
 
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                }
-                                else {
-                                    break;
+                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                    //update the values if its cheaper
+                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                        (*it)->finalcost = newfinalcost;
+                                        (*it)->givencost = newgivencost;
+                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                    }
+                                    else {
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        //else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                        //    if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                        //        MapforAStar[pos][ypos].whichList = onList::OPEN;
+                        //        MapforAStar[pos][ypos].givencost = newgivencost;
+                        //        MapforAStar[pos][ypos].finalcost = newfinalcost;
+                        //        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+
+                        //        if (request.settings.debugColoring) {
+                        //            GridPos colorchange;
+                        //            colorchange.row = pos;
+                        //            colorchange.col = ypos;
+                        //            terrain->set_color(colorchange, Colors::Blue);
+                        //        }
+                        //        OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+                        //    }
+                        //}
                     }
                 }
             }
@@ -747,19 +870,38 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         float newfinalcost = startheuristic + newgivencost;
 
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                }
-                                else {
-                                    break;
+                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
+                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                    //update the values if its cheaper
+                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                        (*it)->finalcost = newfinalcost;
+                                        (*it)->givencost = newgivencost;
+                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                    }
+                                    else {
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        //else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                        //    if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                        //        MapforAStar[pos][ypos].whichList = onList::OPEN;
+                        //        MapforAStar[pos][ypos].givencost = newgivencost;
+                        //        MapforAStar[pos][ypos].finalcost = newfinalcost;
+                        //        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+
+                        //        if (request.settings.debugColoring) {
+                        //            GridPos colorchange;
+                        //            colorchange.row = pos;
+                        //            colorchange.col = ypos;
+                        //            terrain->set_color(colorchange, Colors::Blue);
+                        //        }
+                        //        OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+                        //    }
+                        //}
                     }
                 }
             }
@@ -782,6 +924,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
                 if (topwall || rightwall) {
                     //do nothing
+                    std::cout << "\nitcame here \n";
                 }
                 else {
                     float startheuristic = 0.0f;
@@ -796,7 +939,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                             terrain->set_color(colorchange, Colors::Blue);
                         }
                         MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost = 1.0f;
+                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
                         if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
                         if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
@@ -820,18 +963,36 @@ PathResult AStarPather::compute_path(PathRequest &request)
                         if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
                         float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
                         float newfinalcost = startheuristic + newgivencost;
+                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
+                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
+                                    //update the values if its cheaper
+                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
+                                        (*it)->finalcost = newfinalcost;
+                                        (*it)->givencost = newgivencost;
+                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                                    }
+                                    else {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                                MapforAStar[pos][ypos].whichList = onList::OPEN;
+                                MapforAStar[pos][ypos].givencost = newgivencost;
+                                MapforAStar[pos][ypos].finalcost = newfinalcost;
+                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+                                if (request.settings.debugColoring) {
+                                    GridPos colorchange;
+                                    colorchange.row = pos;
+                                    colorchange.col = ypos;
+                                    terrain->set_color(colorchange, Colors::Blue);
                                 }
-                                else {
-                                    break;
-                                }
+                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
                             }
                         }
                     }
