@@ -256,7 +256,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
         for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
             std::cout << (*it)->GridPosition.row << "    ";
             std::cout << (*it)->GridPosition.col << "     ";
-            std::cout << " F: " << (*it)->finalcost << "G: " << (*it)->givencost << "\n";
+            std::cout << " F: " << (*it)->finalcost << " G: " << (*it)->givencost << "\n";
         }
         std::cout << "\n\n";
 
@@ -284,16 +284,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     break;
                 }
             }
-            /*std::list<AstarNode*>::iterator it = OpenList.begin();
-            for (; std::next(it,1) != OpenList.end(); ++it) {
-                if ((*it)->finalcost <=  (*std::next(it,1))->finalcost ) {
-                    
-                    lowestcost = (*it)->GridPosition;
-                }
-                else {
-                    lowestcost = (*std::next(it, 1))->GridPosition;
-                }
-            }*/
+
             OpenList.erase(toerase);
             if (request.settings.debugColoring) {
                 terrain->set_color(lowestcost, Colors::Yellow);
@@ -793,23 +784,23 @@ PathResult AStarPather::compute_path(PathRequest &request)
                                 }
                             }
                         }
-                        //else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //    if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                        //        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        //        MapforAStar[pos][ypos].givencost = newgivencost;
-                        //        MapforAStar[pos][ypos].finalcost = newfinalcost;
-                        //        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                                MapforAStar[pos][ypos].whichList = onList::OPEN;
+                                MapforAStar[pos][ypos].givencost = newgivencost;
+                                MapforAStar[pos][ypos].finalcost = newfinalcost;
+                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
 
-                        //        if (request.settings.debugColoring) {
-                        //            GridPos colorchange;
-                        //            colorchange.row = pos;
-                        //            colorchange.col = ypos;
-                        //            terrain->set_color(colorchange, Colors::Blue);
-                        //        }
-                        //        OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        //    }
-                        //}
+                                if (request.settings.debugColoring) {
+                                    GridPos colorchange;
+                                    colorchange.row = pos;
+                                    colorchange.col = ypos;
+                                    terrain->set_color(colorchange, Colors::Blue);
+                                }
+                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+                            }
+                        }
                     }
                 }
             }
@@ -885,23 +876,23 @@ PathResult AStarPather::compute_path(PathRequest &request)
                                 }
                             }
                         }
-                        //else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //    if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                        //        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        //        MapforAStar[pos][ypos].givencost = newgivencost;
-                        //        MapforAStar[pos][ypos].finalcost = newfinalcost;
-                        //        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
+                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
+                                MapforAStar[pos][ypos].whichList = onList::OPEN;
+                                MapforAStar[pos][ypos].givencost = newgivencost;
+                                MapforAStar[pos][ypos].finalcost = newfinalcost;
+                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
 
-                        //        if (request.settings.debugColoring) {
-                        //            GridPos colorchange;
-                        //            colorchange.row = pos;
-                        //            colorchange.col = ypos;
-                        //            terrain->set_color(colorchange, Colors::Blue);
-                        //        }
-                        //        OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        //    }
-                        //}
+                                if (request.settings.debugColoring) {
+                                    GridPos colorchange;
+                                    colorchange.row = pos;
+                                    colorchange.col = ypos;
+                                    terrain->set_color(colorchange, Colors::Blue);
+                                }
+                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
+                            }
+                        }
                     }
                 }
             }
