@@ -133,6 +133,145 @@ float AStarPather::applyInconsistent(Vec3& startpos, PathRequest& request) {
 
     return 0;
 }
+void AStarPather::checkingdiagonals(int row, int col, PathRequest& request, GridPos lowestcost, float& startheuristic) {
+    if (MapforAStar[row][col].whichList == onList::WAITING) {
+        GridPos colorchange;
+        colorchange.row = row;
+        colorchange.col = col;
+        if (request.settings.debugColoring) {
+            terrain->set_color(colorchange, Colors::Blue);
+        }
+        MapforAStar[row][col].whichList = onList::OPEN;
+        MapforAStar[row][col].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + sqrt(2.0f);
+        Vec3 thestart = terrain->get_world_position(MapforAStar[row][col].GridPosition);
+        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
+        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
+        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
+        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
+        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
+        //link the parent
+        MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+        //calculate final cost
+        MapforAStar[row][col].finalcost = MapforAStar[row][col].givencost + (startheuristic * request.settings.weight);
+        OpenList.push_back(&MapforAStar[row][col]);
+    }
+    //if its already on the open list
+    else if (MapforAStar[row][col].whichList == onList::OPEN || MapforAStar[col][col].whichList == onList::CLOSED) {
+        //heuristics will not change only the given cost will change
+        Vec3 thestart = terrain->get_world_position(MapforAStar[row][col].GridPosition);
+        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
+        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
+        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
+        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
+        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
+        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + sqrt(2.0f);
+        float newfinalcost = (startheuristic * request.settings.weight) + newgivencost;
+
+        if (MapforAStar[row][col].whichList == onList::OPEN) {
+            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
+                    //update the values if its cheaper
+                    if (newfinalcost < MapforAStar[row][col].finalcost) {
+                        (*it)->finalcost = newfinalcost;
+                        (*it)->givencost = newgivencost;
+                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+        }
+        if (MapforAStar[row][col].whichList == onList::CLOSED) { //if it was on the closed list
+            if (MapforAStar[row][col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                //update all the values
+                MapforAStar[row][col].whichList = onList::OPEN;
+                MapforAStar[row][col].givencost = newgivencost;
+                MapforAStar[row][col].finalcost = newfinalcost;
+                MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                if (request.settings.debugColoring) {
+                    GridPos colorchange;
+                    colorchange.row = row;
+                    colorchange.col = col;
+                    terrain->set_color(colorchange, Colors::Blue);
+                }
+                OpenList.push_back(&MapforAStar[row][col]);
+            }
+
+        }
+    }
+}
+void AStarPather::checkingneighbours(int row, int col, PathRequest& request, GridPos lowestcost, float& startheuristic) {
+    //ensure its not a wall, if not a wall then put on open list
+    if (MapforAStar[row][col].whichList == onList::WAITING) {
+        GridPos colorchange;
+        colorchange.row = row;
+        colorchange.col = col;
+        if (request.settings.debugColoring) {
+            terrain->set_color(colorchange, Colors::Blue);
+        }
+        MapforAStar[row][col].whichList = onList::OPEN;
+        MapforAStar[row][col].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
+        Vec3 thestart = terrain->get_world_position(MapforAStar[row][col].GridPosition);
+        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
+        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
+        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
+        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
+        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
+        //link the parent
+        MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+        //calculate final cost
+        MapforAStar[row][col].finalcost = MapforAStar[row][col].givencost + (startheuristic * request.settings.weight);
+        OpenList.push_back(&MapforAStar[row][col]);
+    }
+    //if its already on the open list
+    else if (MapforAStar[row][col].whichList == onList::OPEN || MapforAStar[col][col].whichList == onList::CLOSED) {
+        //heuristics will not change only the given cost will change
+        Vec3 thestart = terrain->get_world_position(MapforAStar[row][col].GridPosition);
+        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
+        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
+        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
+        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
+        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
+        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
+        float newfinalcost = (startheuristic * request.settings.weight) + newgivencost;
+
+        if (MapforAStar[row][col].whichList == onList::OPEN) {
+            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+                if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
+                    //update the values if its cheaper
+                    if (newfinalcost < MapforAStar[row][col].finalcost) {
+                        (*it)->finalcost = newfinalcost;
+                        (*it)->givencost = newgivencost;
+                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+        }
+        if (MapforAStar[row][col].whichList == onList::CLOSED) { //if it was on the closed list
+            if (MapforAStar[row][col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                //update all the values
+                MapforAStar[row][col].whichList = onList::OPEN;
+                MapforAStar[row][col].givencost = newgivencost;
+                MapforAStar[row][col].finalcost = newfinalcost;
+                MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+                if (request.settings.debugColoring) {
+                    GridPos colorchange;
+                    colorchange.row = row;
+                    colorchange.col = col;
+                    terrain->set_color(colorchange, Colors::Blue);
+                }
+                OpenList.push_back(&MapforAStar[row][col]);
+            }
+
+        }
+    }
+}
 
 
 
@@ -211,7 +350,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
        
         GridPos getposition = terrain->get_grid_position(request.start);
-        MapforAStar[getposition.row][getposition.col].finalcost = startheuristic + MapforAStar[getposition.row][getposition.col].givencost;
+        MapforAStar[getposition.row][getposition.col].finalcost = (startheuristic * request.settings.weight) + MapforAStar[getposition.row][getposition.col].givencost;
         MapforAStar[getposition.row][getposition.col].GridPosition = getposition;
       
         //put the starting node on the openlist
@@ -222,43 +361,14 @@ PathResult AStarPather::compute_path(PathRequest &request)
     GridPos start = terrain->get_grid_position(request.start);
 
     while (OpenList.empty()==false) {
- 
-        /*if (InputHandler::get_current_state(KBKeys::S) == InputHandler::InputState::PRESSED)
-        {
-            const int width = terrain->get_map_width();
-            const int height = terrain->get_map_height();
-            auto& dr = renderer->get_debug_renderer();
-            for (int i=0; i<width;++i)
-            {
-                for (int j = 0; j < height; ++j) {
-
-                    if (MapforAStar[i]+j != nullptr &&(MapforAStar[i][j].whichList == onList::OPEN || MapforAStar[i][j].whichList == onList::CLOSED ) && MapforAStar[i][j].Parent != nullptr)
-                    {
-                        AstarNode* parent =MapforAStar[i][j].Parent;
-                        dr.draw_arrow(terrain->get_world_position(MapforAStar[i][j].GridPosition), terrain->get_world_position(parent->GridPosition), Colors::Black);
-                    }
-
-                }
-            }
-
-            if (InputHandler::get_current_state(KBKeys::A) == InputHandler::InputState::PRESSED)
-            {
-                once = true;
-                return PathResult::PROCESSING;
-            }
-
-            if(!once) return PathResult::PROCESSING;
-        }
-        once = false;
-       */
 
 
-        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+      /*  for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
             std::cout << (*it)->GridPosition.row << "    ";
             std::cout << (*it)->GridPosition.col << "     ";
             std::cout << " F: " << (*it)->finalcost << " G: " << (*it)->givencost << "\n";
         }
-        std::cout << "\n\n";
+        std::cout << "\n\n";*/
 
         //pop the cheapest node on the list
 
@@ -293,8 +403,6 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
         //if the node is goal node
         if (lowestcost== goal) {
-            //push in the goal first
-            request.path.push_front(request.goal);
             int getRow = goal.row;
             int getCol = goal.col;
             int temp = 0;
@@ -313,7 +421,9 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     getRow = MapforAStar[getRow][getCol].Parent->GridPosition.row;
                     getCol = MapforAStar[temp][getCol].Parent->GridPosition.col;
                 }
-            request.path.push_front(request.start);
+                Vec3 topushin2 = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
+                request.path.push_front(topushin2);
+                request.path.push_front(request.start);
             }
             return PathResult::COMPLETE;
         }
@@ -330,74 +440,8 @@ PathResult AStarPather::compute_path(PathRequest &request)
             if ((lowestcost).row != 0) { //checking bottom of parent
                 float startheuristic = 0.0f;
                 int pos = (lowestcost).row - 1;
-                //ensure its not a wall, if not a wall then put on open list
-                if (MapforAStar[pos][(lowestcost).col].whichList == onList::WAITING) {
-                    GridPos colorchange;
-                    colorchange.row = pos;
-                    colorchange.col = lowestcost.col;
-                    if (request.settings.debugColoring) {
-                        terrain->set_color(colorchange, Colors::Blue);
-                    }
-                    MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
-                    MapforAStar[pos][(lowestcost).col].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][(lowestcost).col].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    //link the parent
-                    MapforAStar[pos][lowestcost.col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                    //calculate final cost
-                    MapforAStar[pos][lowestcost.col].finalcost = MapforAStar[pos][(lowestcost).col].givencost + startheuristic;
-                    OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                }
-                //if its already on the open list
-                else if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN || MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) {
-                    //heuristics will not change only the given cost will change
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][(lowestcost).col].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    float newfinalcost = startheuristic + newgivencost;
-
-                    if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN) {
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                    
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                    } 
-                     if (MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) { //if it was on the closed list
-                        if (MapforAStar[pos][(lowestcost).col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
-                            //update all the values
-                            MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
-                            MapforAStar[pos][(lowestcost).col].givencost = newgivencost;
-                            MapforAStar[pos][(lowestcost).col].finalcost = newfinalcost;
-                            MapforAStar[pos][(lowestcost).col].Parent= &MapforAStar[(lowestcost).row][(lowestcost).col];
-                            if (request.settings.debugColoring) {
-                                GridPos colorchange;
-                                colorchange.row = pos;
-                                colorchange.col = lowestcost.col;
-                                terrain->set_color(colorchange, Colors::Blue);
-                            }
-                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        }
-                       
-                    }
-                }
+                int ypos = lowestcost.col;
+                checkingneighbours(pos, ypos, request, lowestcost, startheuristic);
 
             }
             //top
@@ -405,72 +449,8 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 float startheuristic = 0.0f;
                 int ypos = lowestcost.col;
                 int pos = (lowestcost).row + 1;
-                //ensure its not a wall, if not a wall then put on open list
-                if (MapforAStar[pos][(lowestcost).col].whichList == onList::WAITING) {
-                    GridPos colorchange;
-                    colorchange.row = pos;
-                    colorchange.col = lowestcost.col;
-                    if (request.settings.debugColoring) {
-                        terrain->set_color(colorchange, Colors::Blue);
-                    }
-                    MapforAStar[pos][ypos].whichList = onList::OPEN;
-                    MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    //link the parent
-                    MapforAStar[pos][lowestcost.col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                    //calculate final cost
-                    MapforAStar[pos][lowestcost.col].finalcost = MapforAStar[pos][(lowestcost).col].givencost + startheuristic;
-                    OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                }
-                //if its already on the open list
-                else if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN || MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) {
-                    //heuristics will not change only the given cost will change
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    float newfinalcost = startheuristic + newgivencost;
-                    if (MapforAStar[pos][(lowestcost).col].whichList == onList::OPEN) {
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][(lowestcost).col].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][(lowestcost).col].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                     if (MapforAStar[pos][(lowestcost).col].whichList == onList::CLOSED) {
-                        if (MapforAStar[pos][(lowestcost).col].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                            MapforAStar[pos][(lowestcost).col].whichList = onList::OPEN;
-                            MapforAStar[pos][(lowestcost).col].givencost = newgivencost;
-                            MapforAStar[pos][(lowestcost).col].finalcost = newfinalcost;
-                            MapforAStar[pos][(lowestcost).col].Parent= &MapforAStar[(lowestcost).row][(lowestcost).col];
+                checkingneighbours(pos, ypos, request, lowestcost, startheuristic);
 
-
-                            if (request.settings.debugColoring) {
-                                GridPos colorchange;
-                                colorchange.row = pos;
-                                colorchange.col = lowestcost.col;
-                                terrain->set_color(colorchange, Colors::Blue);
-                            }
-                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        }
-                    }
-                }
             }
             //top left
             if (lowestcost.row != height && lowestcost.col != 0) { //checking for top left
@@ -496,223 +476,23 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     float startheuristic = 0.0f;
                     int ypos = (lowestcost).col - 1;
                     int pos = (lowestcost).row + 1;
-                    //ensure its not a wall, if not a wall then put on open list
-                    if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                        GridPos colorchange;
-                        colorchange.row = pos;
-                        colorchange.col = ypos;
-                        if (request.settings.debugColoring) {
-                            terrain->set_color(colorchange, Colors::Blue);
-                        }
-                        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        //link the parent
-                        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                        //calculate final cost
-                        MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                        OpenList.push_back(&MapforAStar[pos][ypos]);
-                    }
-                    //if its already on the open list
-                    else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //heuristics will not change only the given cost will change
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        float newfinalcost = startheuristic + newgivencost;
+                    checkingdiagonals(pos, ypos, request, lowestcost, startheuristic);
 
-                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                    //update the values if its cheaper
-                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                        (*it)->finalcost = newfinalcost;
-                                        (*it)->givencost = newgivencost;
-                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                    }
-                                    else {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                            if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
-                                MapforAStar[pos][ypos].whichList = onList::OPEN;
-                                MapforAStar[pos][ypos].givencost = newgivencost;
-                                MapforAStar[pos][ypos].finalcost = newfinalcost;
-                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                                if (request.settings.debugColoring) {
-                                    GridPos colorchange;
-                                    colorchange.row = pos;
-                                    colorchange.col = ypos;
-                                    terrain->set_color(colorchange, Colors::Blue);
-                                }
-                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                            }
-                        }
-                    }
                 }
-
-                /*topwall = false;
-                leftwall = false;*/
             }
             //left
             if (lowestcost.col != 0) { //checking for left of parent
                 float startheuristic = 0.0f;
                 int ypos = (lowestcost).col - 1;
                 int pos = (lowestcost).row;
-                //ensure its not a wall, if not a wall then put on open list
-                if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                    GridPos colorchange;
-                    colorchange.row = pos;
-                    colorchange.col = ypos;
-                    if (request.settings.debugColoring) {
-                        terrain->set_color(colorchange, Colors::Blue);
-                    }
-                    MapforAStar[pos][ypos].whichList = onList::OPEN;
-                    MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    //link the parent
-                    MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                    //calculate final cost
-                    MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                    OpenList.push_back(&MapforAStar[pos][ypos]);
-                }
-                //if its already on the open list
-                else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                    //heuristics will not change only the given cost will change
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    float newfinalcost = startheuristic + newgivencost;
-                    if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
-                            MapforAStar[pos][ypos].whichList = onList::OPEN;
-                            MapforAStar[pos][ypos].givencost = newgivencost;
-                            MapforAStar[pos][ypos].finalcost = newfinalcost;
-                            MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                            if (request.settings.debugColoring) {
-                                GridPos colorchange;
-                                colorchange.row = pos;
-                                colorchange.col = ypos;
-                                terrain->set_color(colorchange, Colors::Blue);
-                            }
-                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        }
-                    }
-                }
+                checkingneighbours(pos, ypos, request, lowestcost, startheuristic);
             }
             //right
             if (lowestcost.col != height) { //checking for right of parent
                 float startheuristic = 0.0f;
                 int ypos = (lowestcost).col + 1;
                 int pos = (lowestcost).row;
-                //ensure its not a wall, if not a wall then put on open list
-                if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                    GridPos colorchange;
-                    colorchange.row = pos;
-                    colorchange.col = ypos;
-                    if (request.settings.debugColoring) {
-                        terrain->set_color(colorchange, Colors::Blue);
-                    }
-                    MapforAStar[pos][ypos].whichList = onList::OPEN;
-                    MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    //link the parent
-                    MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                    //calculate final cost
-                    MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                    OpenList.push_back(&MapforAStar[pos][ypos]);
-                }
-                //if its already on the open list
-                else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                    //heuristics will not change only the given cost will change
-                    Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                    if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                    if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                    float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                    float newfinalcost = startheuristic + newgivencost;
-
-                    if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-
-                        for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                            if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                //update the values if its cheaper
-                                if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                    (*it)->finalcost = newfinalcost;
-                                    (*it)->givencost = newgivencost;
-                                    (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        if (MapforAStar[pos][ypos].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
-                            MapforAStar[pos][ypos].whichList = onList::OPEN;
-                            MapforAStar[pos][ypos].givencost = newgivencost;
-                            MapforAStar[pos][ypos].finalcost = newfinalcost;
-                            MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                            if (request.settings.debugColoring) {
-                                GridPos colorchange;
-                                colorchange.row = pos;
-                                colorchange.col = ypos;
-                                terrain->set_color(colorchange, Colors::Blue);
-                            }
-                            OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                        }
-                    }
-                }
+                checkingneighbours(pos, ypos, request, lowestcost, startheuristic);
             }
             //bottom right
             if (lowestcost.row != 0 && lowestcost.col != height) {//checking  bottom right
@@ -721,7 +501,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 if (lowestcost.col != height) {
                     int rightcol = (lowestcost).col + 1;
                     int rightrow = (lowestcost).row;
-                    rightwall = terrain->is_wall(rightcol, rightrow);
+                    rightwall = terrain->is_wall(rightrow, rightcol);
                 }
                 if ((lowestcost).row != 0) {
                     int bottomrow = (lowestcost).row - 1;
@@ -735,73 +515,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     float startheuristic = 0.0f;
                     int ypos = (lowestcost).col + 1;
                     int pos = (lowestcost).row - 1;
-                    //ensure its not a wall, if not a wall then put on open list
-                    if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                        GridPos colorchange;
-                        colorchange.row = pos;
-                        colorchange.col = ypos;
-                        if (request.settings.debugColoring) {
-                            terrain->set_color(colorchange, Colors::Blue);
-                        }
-                        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        //link the parent
-                        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                        //calculate final cost
-                        MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                        OpenList.push_back(&MapforAStar[pos][ypos]);
-                    }
-                    //if its already on the open list
-                    else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //heuristics will not change only the given cost will change
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        float newfinalcost = startheuristic + newgivencost;
-                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-
-                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                    //update the values if its cheaper
-                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                        (*it)->finalcost = newfinalcost;
-                                        (*it)->givencost = newgivencost;
-                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                    }
-                                    else {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                                MapforAStar[pos][ypos].whichList = onList::OPEN;
-                                MapforAStar[pos][ypos].givencost = newgivencost;
-                                MapforAStar[pos][ypos].finalcost = newfinalcost;
-                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                                if (request.settings.debugColoring) {
-                                    GridPos colorchange;
-                                    colorchange.row = pos;
-                                    colorchange.col = ypos;
-                                    terrain->set_color(colorchange, Colors::Blue);
-                                }
-                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                            }
-                        }
-                    }
+                    checkingdiagonals(pos, ypos, request, lowestcost, startheuristic);
                 }
             }
             //bottom left
@@ -827,73 +541,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                     float startheuristic = 0.0f;
                     int ypos = (lowestcost).col - 1;
                     int pos = (lowestcost).row - 1;
-                    //ensure its not a wall, if not a wall then put on open list
-                    if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                        GridPos colorchange;
-                        colorchange.row = pos;
-                        colorchange.col = ypos;
-                        if (request.settings.debugColoring) {
-                            terrain->set_color(colorchange, Colors::Blue);
-                        }
-                        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        //link the parent
-                        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                        //calculate final cost
-                        MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                        OpenList.push_back(&MapforAStar[pos][ypos]);
-                    }
-                    //if its already on the open list
-                    else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //heuristics will not change only the given cost will change
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        float newfinalcost = startheuristic + newgivencost;
-
-                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                    //update the values if its cheaper
-                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                        (*it)->finalcost = newfinalcost;
-                                        (*it)->givencost = newgivencost;
-                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                    }
-                                    else {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                                MapforAStar[pos][ypos].whichList = onList::OPEN;
-                                MapforAStar[pos][ypos].givencost = newgivencost;
-                                MapforAStar[pos][ypos].finalcost = newfinalcost;
-                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                                if (request.settings.debugColoring) {
-                                    GridPos colorchange;
-                                    colorchange.row = pos;
-                                    colorchange.col = ypos;
-                                    terrain->set_color(colorchange, Colors::Blue);
-                                }
-                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                            }
-                        }
-                    }
+                    checkingdiagonals(pos, ypos, request, lowestcost, startheuristic);
                 }
             }
             //top right
@@ -910,83 +558,17 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 if (lowestcost.col != height) {
                     int rightcol = (lowestcost).col + 1;
                     int rightrow = (lowestcost).row;
-                    rightwall = terrain->is_wall(rightcol, rightrow);
+                    rightwall = terrain->is_wall(rightrow, rightcol);
                 }
 
                 if (topwall || rightwall) {
                     //do nothing
-                    std::cout << "\nitcame here \n";
                 }
                 else {
                     float startheuristic = 0.0f;
                     int ypos = (lowestcost).col + 1;
                     int pos = (lowestcost).row + 1;
-                    //ensure its not a wall, if not a wall then put on open list
-                    if (MapforAStar[pos][ypos].whichList == onList::WAITING) {
-                        GridPos colorchange;
-                        colorchange.row = pos;
-                        colorchange.col = ypos;
-                        if (request.settings.debugColoring) {
-                            terrain->set_color(colorchange, Colors::Blue);
-                        }
-                        MapforAStar[pos][ypos].whichList = onList::OPEN;
-                        MapforAStar[pos][ypos].givencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        //link the parent
-                        MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                        //calculate final cost
-                        MapforAStar[pos][ypos].finalcost = MapforAStar[pos][ypos].givencost + startheuristic;
-                        OpenList.push_back(&MapforAStar[pos][ypos]);
-                    }
-                    //if its already on the open list
-                    else if (MapforAStar[pos][ypos].whichList == onList::OPEN || MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                        //heuristics will not change only the given cost will change
-                        Vec3 thestart = terrain->get_world_position(MapforAStar[pos][/*(lowestcost).col*/ ypos].GridPosition);
-                        if (request.settings.heuristic == Heuristic::CHEBYSHEV) { startheuristic = applyChebyshev(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::INCONSISTENT) { startheuristic = applyInconsistent(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::MANHATTAN) { startheuristic = applyManhattan(thestart, request); }
-                        if (request.settings.heuristic == Heuristic::OCTILE) { startheuristic = applyOctile(thestart, request); }
-                        float newgivencost = MapforAStar[(lowestcost).row][(lowestcost).col].givencost + 1.0f;
-                        float newfinalcost = startheuristic + newgivencost;
-                        if (MapforAStar[pos][ypos].whichList == onList::OPEN) {
-                            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                                if ((*it)->GridPosition == MapforAStar[pos][ypos].GridPosition) {
-                                    //update the values if its cheaper
-                                    if (newfinalcost < MapforAStar[pos][ypos].finalcost) {
-                                        (*it)->finalcost = newfinalcost;
-                                        (*it)->givencost = newgivencost;
-                                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-                                    }
-                                    else {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (MapforAStar[pos][ypos].whichList == onList::CLOSED) {
-                            if (MapforAStar[pos][ypos].finalcost >= newfinalcost) { //if its cheaper than original, put it on the openlist
-                                MapforAStar[pos][ypos].whichList = onList::OPEN;
-                                MapforAStar[pos][ypos].givencost = newgivencost;
-                                MapforAStar[pos][ypos].finalcost = newfinalcost;
-                                MapforAStar[pos][ypos].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
-
-
-                                if (request.settings.debugColoring) {
-                                    GridPos colorchange;
-                                    colorchange.row = pos;
-                                    colorchange.col = ypos;
-                                    terrain->set_color(colorchange, Colors::Blue);
-                                }
-                                OpenList.push_back(&MapforAStar[pos][(lowestcost).col]);
-                            }
-                        }
-                    }
+                    checkingdiagonals(pos, ypos, request, lowestcost, startheuristic);
                 }
             }
 
