@@ -127,7 +127,7 @@ float AStarPather::applyInconsistent(Vec3& startpos, PathRequest& request) {
     GridPos start = terrain->get_grid_position(startpos);
     GridPos goal = terrain->get_grid_position(request.goal);
 
-    if ((start.row + start.col) % 2 > 0) {
+    if ((start.row + start.col) % 2 ) {
         return applyEuclidean(startpos, request);
     }
 
@@ -168,19 +168,28 @@ void AStarPather::checkingdiagonals(int row, int col, PathRequest& request, Grid
         float newfinalcost = (startheuristic * request.settings.weight) + newgivencost;
 
         if (MapforAStar[row][col].whichList == onList::OPEN) {
-            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
-                    //update the values if its cheaper
-                    if (newfinalcost < MapforAStar[row][col].finalcost) {
-                        (*it)->finalcost = newfinalcost;
-                        (*it)->givencost = newgivencost;
-                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+            //for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+            //    if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
+            //        //update the values if its cheaper
+            //        if (newfinalcost < MapforAStar[row][col].finalcost) {
+            //            (*it)->finalcost = newfinalcost;
+            //            (*it)->givencost = newgivencost;
+            //            (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
-                    }
-                    else {
-                        break;
-                    }
-                }
+            //        }
+            //        else {
+            //            break;
+            //        }
+            //    }
+            //}
+
+            if (MapforAStar[row][col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+                //update all the values
+              
+                MapforAStar[row][col].givencost = newgivencost;
+                MapforAStar[row][col].finalcost = newfinalcost;
+                MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+               
             }
         }
         if (MapforAStar[row][col].whichList == onList::CLOSED) { //if it was on the closed list
@@ -238,19 +247,27 @@ void AStarPather::checkingneighbours(int row, int col, PathRequest& request, Gri
         float newfinalcost = (startheuristic * request.settings.weight) + newgivencost;
 
         if (MapforAStar[row][col].whichList == onList::OPEN) {
-            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-                if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
-                    //update the values if its cheaper
-                    if (newfinalcost < MapforAStar[row][col].finalcost) {
-                        (*it)->finalcost = newfinalcost;
-                        (*it)->givencost = newgivencost;
-                        (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+            //for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+            //    if ((*it)->GridPosition == MapforAStar[row][col].GridPosition) {
+            //        //update the values if its cheaper
+            //        if (newfinalcost < MapforAStar[row][col].finalcost) {
+            //            (*it)->finalcost = newfinalcost;
+            //            (*it)->givencost = newgivencost;
+            //            (*it)->Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
 
-                    }
-                    else {
-                        break;
-                    }
-                }
+            //        }
+            //        else {
+            //            break;
+            //        }
+            //    }
+            //}
+            if (MapforAStar[row][col].finalcost > newfinalcost) { //if its cheaper than original, put it on the openlist
+               //update all the values
+
+                MapforAStar[row][col].givencost = newgivencost;
+                MapforAStar[row][col].finalcost = newfinalcost;
+                MapforAStar[row][col].Parent = &MapforAStar[(lowestcost).row][(lowestcost).col];
+
             }
         }
         if (MapforAStar[row][col].whichList == onList::CLOSED) { //if it was on the closed list
@@ -273,6 +290,64 @@ void AStarPather::checkingneighbours(int row, int col, PathRequest& request, Gri
     }
 }
 
+
+void AStarPather::rubberbanding(WaypointList& edittinglist, int getRow, int getCol, PathRequest& request) {
+    int temp = 0;
+    GridPos start = terrain->get_grid_position(request.start);
+    for (; MapforAStar[getRow][getCol].Parent != &MapforAStar[start.row][start.col];) {
+
+        Vec3 topushin = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
+        edittinglist.push_front(topushin);
+        temp = getRow;
+        getRow = MapforAStar[getRow][getCol].Parent->GridPosition.row;
+        getCol = MapforAStar[temp][getCol].Parent->GridPosition.col;
+    }
+    Vec3 topushin2 = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
+    edittinglist.push_front(topushin2);
+    edittinglist.push_front(request.start);
+
+    //beginning node
+    std::list<Vec3>::iterator startiterator = edittinglist.begin();
+    //middle node
+    std::list<Vec3>::iterator middleiterator = std::next(edittinglist.begin());
+    //3rd node
+    std::list<Vec3>::iterator lastiterator = std::next(std::next(edittinglist.begin()));
+
+
+    for (; lastiterator != edittinglist.end();) {
+
+        GridPos startgrid = terrain->get_grid_position(*startiterator);
+        GridPos endgrid = terrain->get_grid_position(*lastiterator);
+        int rowMin = std::min(startgrid.row, endgrid.row);
+        int rowMax = std::max(startgrid.row, endgrid.row);
+
+        int colMin = std::min(startgrid.col, endgrid.col);
+        int colMax = std::max(startgrid.col, endgrid.col);
+
+        bool thereiswall = false;
+
+        for (int i = rowMin; i <= rowMax; ++i) {
+            for (int j = colMin; j <= colMax; ++j) {
+                if (terrain->is_wall(i, j)) {
+                    thereiswall = true;
+                    break;
+                }
+            }
+        }
+
+        if (thereiswall == true) {
+            ++startiterator;
+            ++middleiterator;
+            ++lastiterator;
+        }
+        else { //there is no wall
+            //erase the middle grid
+            edittinglist.erase(middleiterator);
+            middleiterator = lastiterator;
+            ++lastiterator;
+        }
+    }
+}
 
 
 PathResult AStarPather::compute_path(PathRequest &request)
@@ -317,11 +392,13 @@ PathResult AStarPather::compute_path(PathRequest &request)
     GridPos goal = terrain->get_grid_position(request.goal);
 
     if (request.newRequest) {
+       
         float startheuristic = 0.0f;
         const int width = terrain->get_map_width();
         const int height = terrain->get_map_height();
         //reset 
-        if (OpenList.empty()==false) {
+       // std::cout << OpenList.size() <<"\n";
+        
             for (int j = 0; j < width; ++j) {
                 for (int k = 0; k < width; ++k) {
                     if (terrain->is_wall(j, k)) {
@@ -341,7 +418,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 }
             }
             OpenList.clear();
-        }
+        
         if (request.settings.heuristic==Heuristic::CHEBYSHEV) {startheuristic = applyChebyshev(request.start, request); }
         if (request.settings.heuristic == Heuristic::EUCLIDEAN) { startheuristic = applyEuclidean(request.start,request);}
         if (request.settings.heuristic == Heuristic::INCONSISTENT) {startheuristic = applyInconsistent(request.start,request);}
@@ -363,12 +440,13 @@ PathResult AStarPather::compute_path(PathRequest &request)
     while (OpenList.empty()==false) {
 
 
-      /*  for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
-            std::cout << (*it)->GridPosition.row << "    ";
-            std::cout << (*it)->GridPosition.col << "     ";
-            std::cout << " F: " << (*it)->finalcost << " G: " << (*it)->givencost << "\n";
-        }
-        std::cout << "\n\n";*/
+
+        //for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end(); ++it) {
+        //    std::cout << (*it)->GridPosition.row << "    ";
+        //    std::cout << (*it)->GridPosition.col << "     ";
+        //    std::cout << " F: " << (*it)->finalcost << " G: " << (*it)->givencost << "\n";
+        //}
+        //std::cout << "\n\n";
 
         //pop the cheapest node on the list
 
@@ -404,8 +482,25 @@ PathResult AStarPather::compute_path(PathRequest &request)
         //if the node is goal node
         if (lowestcost== goal) {
             int getRow = goal.row;
-            int getCol = goal.col;
+            int getCol = goal.col;   
             int temp = 0;
+            
+            //if the rubberbanding setting is on and smoothing not on
+            if (request.settings.rubberBanding == true && request.settings.smoothing==false) {
+              
+                WaypointList edittinglist{}; //std::list<Vec3>
+                rubberbanding(edittinglist, getRow, getCol, request);
+                request.path = edittinglist;
+                return PathResult::COMPLETE;
+
+            }
+
+            //if the smoothing setting is on
+            /*if (request.settings.smoothing == true) {
+
+            }*/
+
+
             //if the end position is the start position
             if (MapforAStar[getRow][getCol].GridPosition == MapforAStar[start.row][start.col].GridPosition) {
                 Vec3 topushin = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
@@ -414,7 +509,10 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 return PathResult::COMPLETE;
             }
             else { // the end position is not the start position
+
+                              
                 for (; MapforAStar[getRow][getCol].Parent != &MapforAStar[start.row][start.col];) {
+                    //std::cout << "ROW: " << MapforAStar[getRow][getCol].GridPosition.row << "  COL: " << MapforAStar[getRow][getCol].GridPosition.col << "\n";
                     Vec3 topushin = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
                     request.path.push_front(topushin);
                     temp = getRow;
@@ -423,7 +521,10 @@ PathResult AStarPather::compute_path(PathRequest &request)
                 }
                 Vec3 topushin2 = terrain->get_world_position(MapforAStar[getRow][getCol].GridPosition);
                 request.path.push_front(topushin2);
+               // std::cout << "ROW: " << MapforAStar[getRow][getCol].GridPosition.row << "  COL: " << MapforAStar[getRow][getCol].GridPosition.col << "\n";
                 request.path.push_front(request.start);
+               // std::cout << "\n\n";
+                return PathResult::COMPLETE;
             }
             return PathResult::COMPLETE;
         }

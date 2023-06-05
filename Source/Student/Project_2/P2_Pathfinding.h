@@ -47,6 +47,7 @@ public:
     //because givencost is parent +sqrt(2) for diagonals 
     void checkingdiagonals(int row, int col, PathRequest& request, GridPos lowestcost, float& startheuristic);
 
+    void rubberbanding(WaypointList& edittinglist, int row, int col, PathRequest& request);
 
     void setthemap();
 
