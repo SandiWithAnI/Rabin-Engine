@@ -46,11 +46,7 @@ void AStarPather::shutdown()
         Free any dynamically allocated memory or any other general house-
         keeping you need to do during shutdown.
     */
- /*   const int width = terrain->get_map_width();
-    for (int i = 0; i < width; ++i) {
-        delete[] MapforAStar;
-    } 
-    delete[] MapforAStar;*/
+
 }
 
 void AStarPather::setthemap() {
@@ -485,46 +481,33 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
         //pop the cheapest node on the list
 
-        //if (OpenList.size()==1) { //if only got one element in the list
-        //    lowestcost= (*OpenList.begin())->GridPosition;
-        //    if (request.settings.debugColoring) {
-        //        terrain->set_color(lowestcost, Colors::Yellow);
-        //    }
+        if (OpenList.size()==1) { //if only got one element in the list
+            lowestcost= (*OpenList.begin())->GridPosition;
+            if (request.settings.debugColoring) {
+                terrain->set_color(lowestcost, Colors::Yellow);
+            }
 
-        //    OpenList.pop_back();
-        //}
-        //else {
-        //    lowestcost = OpenList.front()->GridPosition;
-        //    std::list<AstarNode*>::iterator it = std::next(OpenList.begin());
-        //    std::list<AstarNode*>::iterator toerase = OpenList.begin();
-        //    for (; it != OpenList.end();++it) {
-        //        if ((*it)->finalcost < MapforAStar[lowestcost.row][lowestcost.col].finalcost) {
-        //            lowestcost = (*it)->GridPosition;                  
-        //        }
-        //    }
-        //    for (; toerase != OpenList.end(); ++toerase) {
-        //        if ((*toerase)->GridPosition == lowestcost) {
-        //            break;
-        //        }
-        //    }
-        //   // std::cout<<*toerase
-
-        //    OpenList.erase(toerase);
-        //    if (request.settings.debugColoring) {
-        //        terrain->set_color(lowestcost, Colors::Yellow);
-        //    }
-        //}
-
-        auto it{ OpenList.begin() };
-        for (auto i{ OpenList.begin() }; i != OpenList.end(); i++)
-        {
-            if ((*i)->finalcost < (*it)->finalcost) it = i;
+            OpenList.pop_back();
         }
-        lowestcost = (*it)->GridPosition;
-        OpenList.erase(it);
-        if (request.settings.debugColoring) {
-            terrain->set_color(lowestcost, Colors::Yellow);
+        else {
+            lowestcost = OpenList.front()->GridPosition;
+
+            std::list<AstarNode*>::iterator toerase = OpenList.begin();
+
+            for (std::list<AstarNode*>::iterator it = OpenList.begin(); it != OpenList.end();++it) {
+                if ((*it)->finalcost < (*toerase)->finalcost) {
+                    toerase = it;
+                }
+            }
+            lowestcost = (*toerase)->GridPosition;                  
+
+            OpenList.erase(toerase);
+            if (request.settings.debugColoring) {
+                terrain->set_color(lowestcost, Colors::Yellow);
+            }
         }
+
+       
         MapforAStar[(lowestcost).row][(lowestcost).col].whichList = onList::CLOSED;
 
         //if the node is goal node
@@ -770,29 +753,7 @@ PathResult AStarPather::compute_path(PathRequest &request)
    
     return PathResult::IMPOSSIBLE;
     
-    //// Just sample code, safe to delete
-   /* GridPos start = terrain->get_grid_position(request.start);
-    GridPos goal = terrain->get_grid_position(request.goal);
-    terrain->set_color(start, Colors::Orange);
-    terrain->set_color(goal, Colors::Orange);
-    request.path.push_back(request.start);
-    request.path.push_back(request.goal);*/
-
-
-  /*  request.path.push_back(request.start);
-    GridPos pos1;
-    pos1.col = 1;
-    pos1.row = 15;
-
-    GridPos pos2;
-    pos2.col = 2;
-    pos2.row = 10;
-    Vec3 one = terrain->get_world_position(pos1);
-    Vec3 two = terrain->get_world_position(pos2);
-
-    request.path.push_back(two);
-    request.path.push_back(one);
-    request.path.push_back(request.goal);*/
+   
 
 
 
