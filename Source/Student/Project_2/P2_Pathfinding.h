@@ -37,22 +37,23 @@ public:
         makes sense to you.
     */
 
-    float applyManhattan(Vec3& startpos, PathRequest& request);
-    float applyChebyshev(Vec3& startpos, PathRequest& request);
-    float applyEuclidean(Vec3& startpos, PathRequest& request);
-    float applyOctile(Vec3& startpos, PathRequest& request);
-    float applyInconsistent(Vec3& startpos, PathRequest& request);
+    float applyManhattan(Vec3 const& startpos, PathRequest& request);
+    float applyChebyshev(Vec3 const& startpos, PathRequest& request);
+    float applyEuclidean(Vec3 const& startpos, PathRequest& request);
+    float applyOctile(Vec3 const& startpos, PathRequest& request);
+    float applyInconsistent(Vec3 const& startpos, PathRequest& request);
    
-    void checkingneighbours(int row, int col, PathRequest& request, GridPos lowestcost, float& startheuristic);
+    void checkingneighbours(int row, int col, PathRequest& request, GridPos lowestcost, float startheuristic);
     //because givencost is parent +sqrt(2) for diagonals 
-    void checkingdiagonals(int row, int col, PathRequest& request, GridPos lowestcost, float& startheuristic);
+    void checkingdiagonals(int row, int col, PathRequest& request, GridPos lowestcost, float startheuristic);
 
     void rubberbanding(WaypointList& edittinglist, int row, int col, PathRequest& request);
+    void catmull(WaypointList& edittinglist, int row, int col, PathRequest& request, bool needtosort);
 
     void setthemap();
 
 
-    AstarNode**MapforAStar;
+    AstarNode MapforAStar[40][40];
     std::list<AstarNode*>OpenList;
 
     bool once;
