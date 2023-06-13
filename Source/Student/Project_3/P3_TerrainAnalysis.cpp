@@ -14,6 +14,9 @@ bool ProjectThree::implemented_fog_of_war() const // extra credit
 
 float distance_to_closest_wall(int row, int col)
 {
+    
+    float temp = 0;
+    float toreturn = 1000.0f;
     /*
         Check the euclidean distance from the given cell to every other wall cell,
         with cells outside the map bounds treated as walls, and return the smallest
@@ -22,9 +25,43 @@ float distance_to_closest_wall(int row, int col)
         and a wall, respectively.
     */
 
-    // WRITE YOUR CODE HERE
-    
-    return 0.0f; // REPLACE THIS
+    for (int i =-1; i < 41; ++i) {
+        for (int j = -1; j < 41; ++j) {
+            //check if this position is a valid position, if true, proceed with calculation and storing into the array 
+            if (terrain->is_valid_grid_position(i,j) == true) {
+                //check if that cell is a wall
+                if (terrain->is_wall(i,j)) {
+                    float xdiff= abs(static_cast<float>(row - i));
+                    float ydiff= abs(static_cast<float>(col - j));
+                    temp= sqrt((xdiff * xdiff) + (ydiff * ydiff));
+
+                    if (temp<toreturn) {
+                        toreturn = temp;
+                    }
+                }
+                else {
+                    //do nothing
+                }
+
+            }
+            else { //if the position is not valid, means it is out of bound walls
+                float xdiff = abs(static_cast<float>(row - i));
+                float ydiff = abs(static_cast<float>(col - j));
+                temp = sqrt((xdiff * xdiff) + (ydiff * ydiff));
+
+                if (temp < toreturn) {
+                    toreturn = temp;
+                }
+            }
+        }
+    }
+
+  
+
+
+    //std::cout << toreturn << "\n";
+    return toreturn;
+  
 }
 
 bool is_clear_path(int row0, int col0, int row1, int col1)
@@ -39,6 +76,29 @@ bool is_clear_path(int row0, int col0, int row1, int col1)
     */
 
     // WRITE YOUR CODE HERE
+    int RowMin = std::min(row0, row1);
+    int RowMax = std::max(row0, row1);
+
+    int ColMin = std::min(col0, col1);
+    int ColMax = std::max(col0, col1);
+
+    Vec2 start{};
+    start.x = row0;
+    start.y = col0;
+
+    Vec2 goal{};
+    goal.x = row1;
+    goal.y = col1;
+
+    for (int i = RowMin; i < RowMax;++i) {
+        for (int j = ColMin; j < ColMax; ++j) {
+            //check the four sides of the wall
+            if (terrain->is_wall(i,j)==true) {
+                
+            }
+        }
+    }
+
 
     return false; // REPLACE THIS
 }
@@ -50,6 +110,20 @@ void analyze_openness(MapLayer<float> &layer)
         where d is the distance to the closest wall or edge.  Make use of the
         distance_to_closest_wall helper function.  Walls should not be marked.
     */
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            if (terrain->is_wall(i, j) == false) {
+                float dist = distance_to_closest_wall(i, j);
+           // std::cout << dist << "\n";
+                float toset = 1 / (dist * dist);
+              //std::cout << toset << std::endl;
+                layer.set_value(i, j, toset);
+            }
+        }
+    }
 
     // WRITE YOUR CODE HERE
 }
@@ -65,7 +139,7 @@ void analyze_visibility(MapLayer<float> &layer)
         intersect the four boundary lines of every wall cell.  Make use of the is_clear_path
         helper function.
     */
-
+   
     // WRITE YOUR CODE HERE
 }
 
@@ -107,6 +181,7 @@ void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
     // WRITE YOUR CODE HERE
 }
 
+/************************************************** happens when propagation is on , always running ******************************************/
 void propagate_solo_occupancy(MapLayer<float> &layer, float decay, float growth)
 {
     /*
@@ -122,6 +197,36 @@ void propagate_solo_occupancy(MapLayer<float> &layer, float decay, float growth)
         After every cell has been processed into the temporary layer, write the temporary layer into
         the given layer;
     */
+    
+    //the tile with value 1 should not be changed, should be changed the last
+
+   // width and height of the map
+    //const int width = terrain->get_map_width();
+    //const int height = terrain->get_map_height();
+    //float templayer[40][40];
+    //
+    //for (int row = 0; row < width;++row) {
+    //    for (int col = 0; col < height;++col) {
+
+    //        //checking bottom
+    //        if (row !=0) {
+
+    //        }
+    //        //checking top
+    //        if (row!=width) {
+
+    //        }
+    //        //checking top left
+    //        if (row!=height && col !=0) {
+
+    //        }
+
+    //    }
+    //}
+
+
+    ////gets the influence layer of that tile
+    //std::cout << layer.get_value(1, 0) << "\n";
     
     // WRITE YOUR CODE HERE
 }
