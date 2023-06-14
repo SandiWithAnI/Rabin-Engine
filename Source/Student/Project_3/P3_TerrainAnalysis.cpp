@@ -433,8 +433,38 @@ void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
     */
 
     // WRITE YOUR CODE HERE
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
 
-    std::cout << "itcomeshere" << std::endl;
+    GridPos AgentGridPos = terrain->get_grid_position(agent->get_position());
+
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            if (is_clear_path(AgentGridPos.row, AgentGridPos.col, i, j)) {
+               
+
+                Vec3 cell = terrain->get_world_position(i, j);
+                Vec3 agentpos = agent->get_position();
+
+                Vec3 AgentAndCell = agentpos - cell;
+                AgentAndCell.Normalize();
+
+                Vec3 viewvector= agent->get_forward_vector();
+                viewvector.Normalize();
+
+                //do dot product
+                float result = (AgentAndCell.x * viewvector.x) + (AgentAndCell.z * viewvector.z);
+                //0.09 because it will look exactly like the sample, 0.1 can see more
+                if (result <= 0.09f) {
+                    layer.set_value(i, j, 1.0f);
+                }
+                
+                
+            }
+        }
+    }
+    
  
 }
 
