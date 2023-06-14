@@ -76,31 +76,82 @@ bool is_clear_path(int row0, int col0, int row1, int col1)
     */
 
     // WRITE YOUR CODE HERE
+    bool isnottopclear = false;
+    bool isnotbotclear = false;
+    bool isnotleftclear = false;
+    bool isnotrightclear = false;
+
+    Vec3 finddist1= terrain->get_world_position(0, 0);
+    Vec3 finddist2= terrain->get_world_position(0, 1);
+    //because .y gives 0
+    float xdiff = abs(finddist1.x - finddist2.x);
+    float ydiff = abs(finddist1.z - finddist2.z);
+    float distofgrid = sqrt((xdiff* xdiff) + (ydiff*ydiff));
+
     int RowMin = std::min(row0, row1);
     int RowMax = std::max(row0, row1);
 
     int ColMin = std::min(col0, col1);
     int ColMax = std::max(col0, col1);
 
-    Vec2 start{};
-    start.x = row0;
-    start.y = col0;
+    
+    Vec3 startpoint = terrain->get_world_position(row0, col0);
+    Vec2 starto{};
+    starto.x = startpoint.x;
+    starto.y = startpoint.z;
+    Vec3 goalpoint = terrain->get_world_position(row1, col1);
+    Vec2 endo{};
+    endo.x = goalpoint.x;
+    endo.y = goalpoint.z;
 
-    Vec2 goal{};
-    goal.x = row1;
-    goal.y = col1;
 
-    for (int i = RowMin; i < RowMax;++i) {
-        for (int j = ColMin; j < ColMax; ++j) {
+    //needs to be max + 1 because max is the index of the row/column, not adding +1 will not let it go to those cells
+    for (int i = RowMin; i < (RowMax+1);++i) {
+        for (int j = ColMin; j < (ColMax+1); ++j) {
             //check the four sides of the wall
-            if (terrain->is_wall(i,j)==true) {
+            if (terrain->is_wall(i, j) == true) {
+                //get the vec2 of the wall, which will give the location of the middle of the wall
+                Vec3 wallmidpoint = terrain->get_world_position(i, j);
+                Vec2 getmid{};
+                getmid.x = wallmidpoint.x;
+                getmid.y = wallmidpoint.z;
+
+                //all the points on the wall, 0.02 will be the slight padding
+                Vec2 topleft{};
+                topleft.x = getmid.x + (distofgrid/2) + 0.02f;
+                topleft.y = getmid.y - (distofgrid / 2) - 0.02f;
                 
+                Vec2 topright{};
+                topright.x = getmid.x + (distofgrid / 2)+ 0.02f;
+                topright.y = getmid.y + (distofgrid / 2)+ 0.02f;
+
+                Vec2 botleft{};
+                botleft.x = getmid.x - (distofgrid / 2) - 0.02f;
+                botleft.y = getmid.y - (distofgrid / 2) - 0.02f;
+
+                Vec2 botright{};
+                botright.x = getmid.x - (distofgrid / 2) - 0.02f;
+                botright.y = getmid.y + (distofgrid / 2) + 0.02f;
+
+                //check  top
+                isnottopclear=line_intersect(starto, endo, topleft, topright);
+                //check left
+                isnotleftclear=line_intersect(starto, endo, topleft, botleft);
+                //check right
+                isnotrightclear=line_intersect(starto, endo, topright, botright);
+                //check bottom
+                isnotbotclear=line_intersect(starto, endo, botleft, botright);
+
+                //if there is a line intersect, means is not a clear path
+                if (isnotbotclear || isnottopclear || isnotleftclear || isnotrightclear) {
+                    return false;
+                }
             }
         }
     }
 
 
-    return false; // REPLACE THIS
+    return true; // REPLACE THIS
 }
 
 void analyze_openness(MapLayer<float> &layer)
@@ -140,6 +191,52 @@ void analyze_visibility(MapLayer<float> &layer)
         helper function.
     */
    
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+    float count = 0.0f;
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            //if the cell is not a wall
+            if (terrain->is_wall(i, j) == false) {
+                //check this one grid with every other grid and itself(?)
+                for (int checkingx = 0; checkingx < width; ++checkingx) {
+                    for (int checkingy = 0; checkingy < height; ++checkingy) {
+                        //if the path to that grid is clear 
+                        if (is_clear_path(i, j, checkingx, checkingy)) {
+                            count += 1.0f;
+                        }
+
+                    }
+                }
+                //now set the value of that grid and reset count
+                float value = count / 160.0f;
+                if (value > 1.0f) {
+                    value = 1.0f;
+                }
+                layer.set_value(i, j, value);
+                count = 0.0f;
+
+            }
+
+
+        }
+    }
+
+    //debuggging
+
+   /* for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            if (is_clear_path(1, 0, i, j)) {
+                count += 1.0f;
+            }
+        }
+    }
+    
+    layer.set_value(1, 0, count);
+    std::cout << layer.get_value(1, 0)<< std::endl;*/
+    
     // WRITE YOUR CODE HERE
 }
 
@@ -156,6 +253,12 @@ void analyze_visible_to_cell(MapLayer<float> &layer, int row, int col)
     */
 
     // WRITE YOUR CODE HERE
+
+    GridPos sendto3;
+    sendto3.row = row;
+    sendto3.col = col;
+    Vec3 toprint = terrain->get_world_position(sendto3);
+    std::cout << toprint.x << "   " << toprint.y << "    " << toprint.z << std::endl;
 }
 
 void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
