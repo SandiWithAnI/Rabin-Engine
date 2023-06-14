@@ -239,7 +239,7 @@ void analyze_visibility(MapLayer<float> &layer)
     
     // WRITE YOUR CODE HERE
 }
-
+//visibility to agent
 void analyze_visible_to_cell(MapLayer<float> &layer, int row, int col)
 {
     /*
@@ -254,13 +254,164 @@ void analyze_visible_to_cell(MapLayer<float> &layer, int row, int col)
 
     // WRITE YOUR CODE HERE
 
-    GridPos sendto3;
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            //for every cell in given layer mark it with 1.0 and is not a wall
+            if (terrain->is_wall(i, j) == false) {
+
+                layer.set_value(i, j, 1.0f);
+                //if its not visible 
+                if (is_clear_path(row, col, i, j) == false) {
+                    //checking neighbouring cells if they are value 1
+
+                    //checking bottom
+                    if (i != 0) {
+                        if (layer.get_value(i - 1, j) == 1.0f) {
+                            layer.set_value(i, j, 0.5f);
+                            continue;
+                        }
+                    }
+
+                    //checking left
+                    if (j != 0) {
+                        if (layer.get_value(i, j - 1) == 1.0f) {
+                            layer.set_value(i, j, 0.5f);
+                            continue;
+                        }
+                    }
+                    //checking right
+                    if (j != (height - 1)) {
+                        if (layer.get_value(i, j + 1) == 1.0f) {
+                            layer.set_value(i, j, 0.5f);
+                            continue;
+                        }
+                    }
+                    //checking top
+                    if (i != (width - 1)) {
+                        if (layer.get_value(i + 1, j) == 1.0f) {
+                            layer.set_value(i, j, 0.5f);
+                            continue;
+                        }
+                    }
+                    //checking top left
+                    if (i != (width - 1) && j != 0) {
+                        // need to check if there is walls for diagonals
+                        bool topwall = false;
+                        bool leftwall = false;
+
+                        if (i != (width - 1)) {
+                            topwall = terrain->is_wall(i + 1, j);
+                        }
+                        if (j != 0) {
+                            leftwall = terrain->is_wall(i, j - 1);
+                        }
+
+                        if (topwall || leftwall) {
+                            //do nothing
+                        }
+                        else {
+                            if (layer.get_value(i + 1, j - 1) == 1.0f) {
+                                layer.set_value(i, j, 0.5f);
+                                continue;
+                            }
+                        }
+
+                    }
+                    //checking bottom right
+                    if (i != 0 && j != (height - 1)) {
+                        bool rightwall = false;
+                        bool bottomwall = false;
+
+                        if (j != (height-1)) {
+                            rightwall = terrain->is_wall(i,j+1);
+                        }
+                        if (i!=0) {
+                            bottomwall = terrain->is_wall(i - 1, j);
+                        }
+
+                        if (rightwall || bottomwall) {
+                            //do nothing
+                        }
+                        else {
+
+                            if (layer.get_value(i - 1, j + 1) == 1.0f) {
+                                layer.set_value(i, j, 0.5f);
+                                continue;
+                            }
+                        }
+
+                    }
+                    //checking bottom left
+                    if (i != 0 && j != 0) {
+
+                        bool leftwall = false;
+                        bool bottomwall = false;
+
+                        if (j != 0) {
+                            leftwall = terrain->is_wall(i, j - 1);
+                        }
+                        if (i != 0) {
+                            bottomwall = terrain->is_wall(i - 1, j);
+                        }
+
+                        if (leftwall || bottomwall) {
+                            //do nothing
+                        }
+                        else {
+
+                            if (layer.get_value(i - 1, j - 1) == 1.0f) {
+                                layer.set_value(i, j, 0.5f);
+                                continue;
+                            }
+                        }
+
+                    }
+                    //checking top right
+                    if (i != (width - 1) && j != (height - 1)) {
+
+                        bool topwall = false;
+                        bool rightwall = false;
+
+                        if (i != (width-1) ) {
+                            topwall = terrain->is_wall(i + 1, j);
+                        }
+                        if (j!=(height-1)) {
+                            rightwall = terrain->is_wall(i, j + 1);
+                        }
+
+                        if (topwall || rightwall) {
+                            //do nothing
+                        }
+                        else {
+
+                            if (layer.get_value(i + 1, j + 1) == 1.0f) {
+                                layer.set_value(i, j, 0.5f);
+                                continue;
+                            }
+                        }
+
+                    }
+
+                    layer.set_value(i, j, 0.0f);
+                }
+            }
+            else {
+                layer.set_value(i, j, 0.0f);
+            }
+        }
+    }
+
+  /*  GridPos sendto3;
     sendto3.row = row;
     sendto3.col = col;
     Vec3 toprint = terrain->get_world_position(sendto3);
-    std::cout << toprint.x << "   " << toprint.y << "    " << toprint.z << std::endl;
+    std::cout << toprint.x << "   " << toprint.y << "    " << toprint.z << std::endl;*/
 }
 
+//this is search
 void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
 {
     /*
@@ -282,6 +433,9 @@ void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
     */
 
     // WRITE YOUR CODE HERE
+
+    std::cout << "itcomeshere" << std::endl;
+ 
 }
 
 /************************************************** happens when propagation is on , always running ******************************************/
