@@ -488,30 +488,167 @@ void propagate_solo_occupancy(MapLayer<float> &layer, float decay, float growth)
     //the tile with value 1 should not be changed, should be changed the last
 
    // width and height of the map
-    //const int width = terrain->get_map_width();
-    //const int height = terrain->get_map_height();
-    //float templayer[40][40];
-    //
-    //for (int row = 0; row < width;++row) {
-    //    for (int col = 0; col < height;++col) {
-
-    //        //checking bottom
-    //        if (row !=0) {
-
-    //        }
-    //        //checking top
-    //        if (row!=width) {
-
-    //        }
-    //        //checking top left
-    //        if (row!=height && col !=0) {
-
-    //        }
-
-    //    }
-    //}
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
 
 
+    float templayer[40][40]{};
+    
+    for (int row = 0; row < width;++row) {
+        for (int col = 0; col < height;++col) {
+
+            float biggestvalue = 0;
+
+            if (terrain->is_wall(row, col) == false) {
+
+                //checking bottom
+                if (row != 0) {
+                    float botvalue = layer.get_value(row - 1, col) * exp(-1 * decay);
+                    
+                    if (botvalue > biggestvalue) {                      
+                        biggestvalue = botvalue;
+                    }
+                }
+                //checking top
+                if (row != (width - 1)) {
+                    float topvalue = layer.get_value(row + 1, col) * exp(-1 * decay);
+                    if (topvalue > biggestvalue) {
+                        biggestvalue = topvalue;
+                    }
+                }
+
+                //checking left
+                if (col != 0) {
+                    float leftvalue = layer.get_value(row, col - 1) * exp(-1 * decay);
+                    if (leftvalue > biggestvalue) {
+                        biggestvalue = leftvalue;
+                    }
+                }
+
+                //checking right
+                if (col != (height - 1)) {
+                    float rightvalue = layer.get_value(row, col + 1) * exp(-1 * decay);
+                    if (rightvalue > biggestvalue) {
+                        biggestvalue = rightvalue;
+                    }
+                }
+
+
+                //checking top left
+                if (row != (width - 1) && col != 0) {
+                    // need to check if there is walls for diagonals
+                    bool topwall = false;
+                    bool leftwall = false;
+
+                    if (row != (width - 1)) {
+                        topwall = terrain->is_wall(row + 1, col);
+                    }
+                    if (col != 0) {
+                        leftwall = terrain->is_wall(row, col - 1);
+                    }
+
+                    if (topwall || leftwall) {
+                        //do nothing
+                    }
+                    else {
+
+                        float rightvalue = layer.get_value(row + 1, col - 1) * exp(-sqrt(2.0f) * decay);
+                        if (rightvalue > biggestvalue) {
+                            biggestvalue = rightvalue;
+                        }
+
+                    }
+                }
+
+
+                //checking bottom right
+                if (row != 0 && col != (height - 1)) {
+                    bool rightwall = false;
+                    bool bottomwall = false;
+
+                    if (col != (height - 1)) {
+                        rightwall = terrain->is_wall(row, col + 1);
+                    }
+                    if (row != 0) {
+                        bottomwall = terrain->is_wall(row - 1, col);
+                    }
+
+                    if (rightwall || bottomwall) {
+                        //do nothing
+                    }
+                    else {
+
+                        float rightvalue = layer.get_value(row - 1, col + 1) * exp(-sqrt(2.0f) * decay);
+                        if (rightvalue > biggestvalue) {
+                            biggestvalue = rightvalue;
+                        }
+
+                    }
+                }
+
+                //checking bottom left
+                if (row != 0 && col != 0) {
+
+                    bool leftwall = false;
+                    bool bottomwall = false;
+
+                    if (col != 0) {
+                        leftwall = terrain->is_wall(row, col - 1);
+                    }
+                    if (row != 0) {
+                        bottomwall = terrain->is_wall(row - 1, col);
+                    }
+
+                    if (leftwall || bottomwall) {
+                        //do nothing
+                    }
+                    else {
+
+                        float rightvalue = layer.get_value(row - 1, col - 1) * exp(-sqrt(2.0f) * decay);
+                        if (rightvalue > biggestvalue) {
+                            biggestvalue = rightvalue;
+                        }
+                       
+                    }
+                }
+
+                //checking top right
+                if (row != (width - 1) && col != (height - 1)) {
+
+                    bool topwall = false;
+                    bool rightwall = false;
+
+                    if (row != (width - 1)) {
+                        topwall = terrain->is_wall(row + 1, col);
+                    }
+                    if (col != (height - 1)) {
+                        rightwall = terrain->is_wall(row, col + 1);
+                    }
+
+                    if (topwall || rightwall) {
+                        //do nothing
+                    }
+                    else {
+
+                        float rightvalue = layer.get_value(row + 1, col + 1) * exp(-sqrt(2.0f) * decay);
+                        if (rightvalue > biggestvalue) {
+                            biggestvalue = rightvalue;
+                        }
+
+                    }
+                }
+
+                float getvalue= lerp(layer.get_value(row,col), biggestvalue, growth);              
+                templayer[row][col] = getvalue;
+            }
+        }
+    }
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {           
+                layer.set_value(i, j, templayer[i][j]);
+        }
+    }
     ////gets the influence layer of that tile
     //std::cout << layer.get_value(1, 0) << "\n";
     
@@ -548,6 +685,9 @@ void normalize_solo_occupancy(MapLayer<float> &layer)
     */
 
     // WRITE YOUR CODE HERE
+    
+    //loop thru the map, get the biggest value and save it
+    //loop thru the map again, all the get value divide the biggest value
 }
 
 void normalize_dual_occupancy(MapLayer<float> &layer)
@@ -562,6 +702,8 @@ void normalize_dual_occupancy(MapLayer<float> &layer)
     */
 
     // WRITE YOUR CODE HERE
+
+   
 }
 
 void enemy_field_of_view(MapLayer<float> &layer, float fovAngle, float closeDistance, float occupancyValue, AStarAgent *enemy)
@@ -582,6 +724,8 @@ void enemy_field_of_view(MapLayer<float> &layer, float fovAngle, float closeDist
     */
 
     // WRITE YOUR CODE HERE
+
+    //std::cout << "this is it" << std::endl;
 }
 
 bool enemy_find_player(MapLayer<float> &layer, AStarAgent *enemy, Agent *player)
@@ -608,6 +752,8 @@ bool enemy_find_player(MapLayer<float> &layer, AStarAgent *enemy, Agent *player)
     return false;
 }
 
+//only gets called once
+
 bool enemy_seek_player(MapLayer<float> &layer, AStarAgent *enemy)
 {
     /*
@@ -622,6 +768,8 @@ bool enemy_seek_player(MapLayer<float> &layer, AStarAgent *enemy)
     */
 
     // WRITE YOUR CODE HERE
+
+   /* std::cout << "THIS IS IT TOOOOOOOOOO" << std::endl;*/
 
     return false; // REPLACE THIS
 }
