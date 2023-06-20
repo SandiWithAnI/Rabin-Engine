@@ -685,9 +685,30 @@ void normalize_solo_occupancy(MapLayer<float> &layer)
     */
 
     // WRITE YOUR CODE HERE
-    
-    //loop thru the map, get the biggest value and save it
-    //loop thru the map again, all the get value divide the biggest value
+
+
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+    float biggestval = 0;
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+                if (layer.get_value(i, j) > biggestval) {
+                    biggestval = layer.get_value(i, j);
+                }
+        }
+    }
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {        
+                float valuetoset = (layer.get_value(i, j) / biggestval);
+                if (valuetoset >= 0) {
+                    layer.set_value(i, j, valuetoset);
+                }
+        }
+    }
+
 }
 
 void normalize_dual_occupancy(MapLayer<float> &layer)
