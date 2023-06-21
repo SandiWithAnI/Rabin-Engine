@@ -455,10 +455,14 @@ void analyze_agent_vision(MapLayer<float> &layer, const Agent *agent)
 
                 //do dot product
                 float result = (AgentAndCell.x * viewvector.x) + (AgentAndCell.z * viewvector.z);
-                //0.09 because it will look exactly like the sample, 0.1 can see more
-                if (result <= 0.09f) {
-                    layer.set_value(i, j, 1.0f);
+
+                
+
+                if (result <= 0.09f ) {
+                       layer.set_value(i, j, 1.0f);
                 }
+
+                
                 
                 
             }
@@ -746,7 +750,66 @@ void enemy_field_of_view(MapLayer<float> &layer, float fovAngle, float closeDist
 
     // WRITE YOUR CODE HERE
 
-    //std::cout << "this is it" << std::endl;
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
+
+   
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            if (layer.get_value(i, j) < 0) {
+                layer.set_value(i, j, 0);
+            }
+        }
+    }
+
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+
+                GridPos AgentGridPos = terrain->get_grid_position(enemy->get_position());
+
+                Vec3 cell = terrain->get_world_position(i, j);
+                Vec3 agentpos = enemy->get_position();
+
+                float theXdiff = abs(static_cast<float>(AgentGridPos.row - i));
+                float theYdiff = abs(static_cast<float>(AgentGridPos.col - j));
+
+                float thetemp = sqrt((theXdiff * theXdiff) + (theYdiff * theYdiff));
+
+                
+               
+                //the one arnd the enemy
+
+                if (thetemp < closeDistance) {
+                    if (is_clear_path(AgentGridPos.row, AgentGridPos.col, i, j)) {
+                        layer.set_value(i, j, occupancyValue);
+                    }
+                }
+
+
+                //FOV
+
+                else if (is_clear_path(AgentGridPos.row, AgentGridPos.col, i, j)) {
+                    Vec3 AgentAndCell = agentpos - cell;
+                    AgentAndCell.Normalize();
+
+                    Vec3 viewvector = enemy->get_forward_vector();
+                    viewvector.Normalize();
+
+                    //do dot product
+                    float result = (AgentAndCell.x * viewvector.x) + (AgentAndCell.z * viewvector.z);
+                   
+
+                    if (result < cosf((fovAngle) / 2.0f * (PI / 180.0f))) {
+                        layer.set_value(i, j, occupancyValue);
+                    }
+
+                }
+        }
+    }
+    
+   
 }
 
 bool enemy_find_player(MapLayer<float> &layer, AStarAgent *enemy, Agent *player)
@@ -768,9 +831,10 @@ bool enemy_find_player(MapLayer<float> &layer, AStarAgent *enemy, Agent *player)
             return true;
         }
     }
-
+    
     // player isn't in the detection radius or fov cone, OR somehow off the map
     return false;
+
 }
 
 //only gets called once
@@ -790,7 +854,61 @@ bool enemy_seek_player(MapLayer<float> &layer, AStarAgent *enemy)
 
     // WRITE YOUR CODE HERE
 
-   /* std::cout << "THIS IS IT TOOOOOOOOOO" << std::endl;*/
+ 
+    float highestvalue = 0;
+    Vec3 getposition{};
+    getposition.x = -1;
+    getposition.y = -1;
+    getposition.z = -1;
+    const int width = terrain->get_map_width();
+    const int height = terrain->get_map_height();
 
-    return false; // REPLACE THIS
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            //checking if the highest value is the same. if the same neeed to pick the cell closest to the enemy
+            if (layer.get_value(i, j) == highestvalue) {
+
+                GridPos enemygrid = terrain->get_grid_position(enemy->get_position());
+
+                // comparing the current cell with the enemy position
+                float currXdiff= abs(static_cast<float>(enemygrid.row - i));
+                float currYdiff= abs(static_cast<float>(enemygrid.col - j));
+
+                float currtemp= sqrt((currXdiff * currXdiff) + (currYdiff * currYdiff));
+
+              
+                //comparing the saved cell with the enemy position
+
+                GridPos prevposition = terrain->get_grid_position(getposition);
+
+                float prevXdiff = abs(static_cast<float>(enemygrid.row - prevposition.row));
+                float prevYdiff = abs(static_cast<float>(enemygrid.col - prevposition.col));
+
+                float prevtemp= sqrt((prevXdiff * prevXdiff) + (prevYdiff * prevYdiff));
+
+                //if the current cell is closer to the enemy than the previous cell ,save the current cell
+                if (currtemp < prevtemp) {
+                    getposition = terrain->get_world_position(i, j);
+                }
+                
+            }
+            
+            if (layer.get_value(i, j) > highestvalue) {
+                highestvalue = layer.get_value(i, j);
+                getposition = terrain->get_world_position(i, j);
+            }
+
+        }
+    }
+
+    
+
+    if (getposition != Vec3{ -1,-1,-1 }) {
+        enemy->path_to(getposition);
+        return true;
+    }
+
+    return false;
+
+    
 }
